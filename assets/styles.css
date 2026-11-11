@@ -434,3 +434,13 @@ pre.code,.code{font-family:var(--mono);background:#0a1020;color:#dbe7ff;border:1
 .slideCard .demo,.card .tblwrap,.assess pre{max-width:100%;overflow-x:auto}
 #fs{max-width:100%}.flash+.toolbar,.shead label{max-width:100%}
 .hero{overflow-x:clip}body{overflow-x:clip}
+
+/* safe vertical centring: tall slides start at the top and scroll instead of being cut */
+.pres .pbody{align-items:flex-start}
+.pres .slide{margin:auto 0}
+.pres .notes.show~.pfoot{position:relative}
+/* title slides: long compiler-topic titles get more width and a calmer size */
+.pres .two.title{grid-template-columns:minmax(0,1fr) clamp(110px,16vw,240px)}
+.pres .title h2{font-size:clamp(30px,4.3vw,66px);line-height:1.08}
+.pres .title .bigicon{font-size:clamp(56px,8.5vw,130px)}
+@media (max-width:900px){.pres .two.title{grid-template-columns:1fr}.pres .title .bigicon{display:none}}

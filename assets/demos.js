@@ -16,6 +16,11 @@ function mount(el, id){
   const ctl = h('div',{class:'ctl'});
   el.append(stage, cap, ctl);
   const ctx = def.build(stage) || {};
+  // grow the SVG viewBox so nothing drawn near the edges is clipped
+  const svg = stage.querySelector('svg');
+  if(svg && svg.viewBox && svg.viewBox.baseVal){ try{ const b=svg.getBBox(), v=svg.viewBox.baseVal; if(b.width>0){
+    const x0=Math.min(v.x,b.x-8), y0=Math.min(v.y,b.y-8), x1=Math.max(v.x+v.width,b.x+b.width+8), y1=Math.max(v.y+v.height,b.y+b.height+8);
+    svg.setAttribute('viewBox',`${x0} ${y0} ${x1-x0} ${y1-y0}`); } }catch(e){} }
   const n = def.caps.length; let i = 0, timer = null;
   const play = h('button',{class:'btn sm pri',type:'button'},'▶ Play');
   const step = h('button',{class:'btn sm',type:'button'},'⏭ Step');

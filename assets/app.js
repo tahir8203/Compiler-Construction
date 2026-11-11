@@ -240,12 +240,20 @@ function renderSlide(dir){
     inner = vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code)?'one':x.demo?'wide':''}"><div>${txt}</div>${vis}</div>` : txt;
   }
   const b=$('#pbody'); b.innerHTML=`<div class="slide ${dir}">${inner}</div>`; b.scrollTop=0;
-  mountDemos(b);
+  mountDemos(b); fitSlide(); setTimeout(fitSlide,80);
   const qq=$('.qq',b); if(qq) qq.onclick=e=>{ const o=e.target.closest('.op'); if(!o||qq.classList.contains('done')) return; qq.classList.add('done'); $$('.op',qq)[x.q.a].classList.add('right'); if(+o.dataset.j!==x.q.a) o.classList.add('wrong'); };
   $('#pnotes').innerHTML=`<b>Presenter notes:</b> ${x.n||'—'}`; $('#pnotes').classList.toggle('show',P.notes);
   if(!$('#pov').classList.contains('show')) $('#pNext').focus({preventScroll:true});
   if(P.watch) scheduleWatch();
 }
+/* Fit-to-screen: shrink a slide that is taller than the stage so nothing is cut off (never below 60%; beyond that the stage scrolls). */
+function fitSlide(){
+  const b=$('#pbody'), sl=b&&$('.slide',b); if(!sl) return;
+  sl.style.zoom=''; const cs=getComputedStyle(b);
+  const avail=b.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom), need=sl.scrollHeight;
+  if(need>avail+2) sl.style.zoom=Math.max(0.6, (avail-4)/need).toFixed(3);
+}
+addEventListener('resize',()=>{ if(P) fitSlide(); });
 /* Watch mode: plays the deck like an animated video — animations auto-play, quizzes reveal, slides auto-advance. */
 function scheduleWatch(){
   clearTimeout(P.wt); clearTimeout(P.wt2);
@@ -262,7 +270,7 @@ function startWatch(){ if(!P) return; P.watch=true; $('#pW').textContent='⏸ Pa
 function stopWatch(){ if(!P||!P.watch) return; P.watch=false; clearTimeout(P.wt); clearTimeout(P.wt2); $('#pW').textContent='▶ Watch (W)'; $('#pW').classList.remove('on'); const w=$('.wbar'); if(w) w.remove(); }
 function go(dlt){ const j=P.i+dlt; if(j<0||j>=P.d.length) return; location.replace(`#/p/${P.s.id}/${j+1}`); }
 function jump(j){ location.replace(`#/p/${P.s.id}/${j}`); }
-function toggleNotes(){ P.notes=!P.notes; $('#pnotes').classList.toggle('show',P.notes); }
+function toggleNotes(){ P.notes=!P.notes; $('#pnotes').classList.toggle('show',P.notes); fitSlide(); }
 function full(){ if(document.fullscreenElement) document.exitFullscreen(); else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); }
 function overview(){ const o=$('#pov'); if(o.classList.contains('show')){ o.classList.remove('show'); return; }
   o.innerHTML=`<div class="toolbar"><b style="font-family:var(--disp);font-size:20px">Slide overview</b><span style="flex:1"></span><button class="btn sm" id="ovx">Close (O)</button></div><div class="og">${P.d.map((x,k)=>`<button data-k="${k+1}" class="${k===P.i?'cur':''}"><small>${k+1} · ${esc(strip(x.k||''))}</small>${esc(strip(x.h||x.q&&x.q.q||''))}</button>`).join('')}</div>`;
