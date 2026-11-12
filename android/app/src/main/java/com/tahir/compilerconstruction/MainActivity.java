@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
                 customCallback = callback;
                 root.addView(view, new FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-                setImmersive(true);
+                setFullScreenBars(true);
             }
 
             @Override
@@ -113,7 +113,7 @@ public class MainActivity extends Activity {
                 customView = null;
                 if (customCallback != null) customCallback.onCustomViewHidden();
                 customCallback = null;
-                setImmersive(false);
+                setFullScreenBars(false);
             }
         });
 
@@ -122,7 +122,7 @@ public class MainActivity extends Activity {
     }
 
     @SuppressWarnings("deprecation")
-    private void setImmersive(boolean on) {
+    private void setFullScreenBars(boolean on) {
         if (Build.VERSION.SDK_INT >= 30) {
             WindowInsetsController c = getWindow().getInsetsController();
             if (c == null) return;

@@ -20,7 +20,7 @@ Static site, no build step. Open `index.html` directly or serve the folder. Ever
 
 `android/` is a native Android app that bundles the whole course and works offline, including progress tracking, Watch mode, the lab tools and the classic Lectures 1–3 page. The phone's back button closes a presentation and steps back through pages. Fullscreen hides the system bars, and Print opens Android's Save as PDF.
 
-GitHub Actions (`.github/workflows/android.yml`) builds the APK on every push to `main` and keeps it as a build artifact. Pushing a tag `app-vX.Y.Z` also publishes a GitHub Release. The latest APK is always at
+**Build on this PC:** `bash android/build-local.sh 1.0.1 2` (version name, version code). It uses the existing tools in `C:\dev\jdk21` and `C:\devndroid-sdk` and writes `D:\Fall 2026\Compiler\CompilerConstruction.apk`. Then upload it to a GitHub Release. Alternatively, GitHub Actions (`.github/workflows/android.yml`) builds and releases when a tag `app-vX.Y.Z` is pushed. The latest APK is always at
 https://github.com/tahir8203/Compiler-Construction/releases/latest/download/CompilerConstruction.apk
 
 Signing uses the repo secrets `KEYSTORE_B64` (base64 of the PKCS12 key) and `KEYSTORE_PASSWORD`. The key is not in the repo. Keep the backup safe, because every future update must be signed with the same key.
