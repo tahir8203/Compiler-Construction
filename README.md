@@ -16,6 +16,15 @@ Static site, no build step. Open `index.html` directly or serve the folder. Ever
 - **Watch mode** plays any lecture like a video. Revision dashboard, flashcards, glossary, search, bookmarks, progress tracking (localStorage), light/dark theme and print handouts.
 - The original **Lectures 1–3** page is kept at `lectures-1-3.html`.
 
+## Android app
+
+`android/` is a native Android app that bundles the whole course and works offline, including progress tracking, Watch mode, the lab tools and the classic Lectures 1–3 page. The phone's back button closes a presentation and steps back through pages. Fullscreen hides the system bars, and Print opens Android's Save as PDF.
+
+GitHub Actions (`.github/workflows/android.yml`) builds the APK on every push to `main` and keeps it as a build artifact. Pushing a tag `app-vX.Y.Z` also publishes a GitHub Release. The latest APK is always at
+https://github.com/tahir8203/Compiler-Construction/releases/latest/download/CompilerConstruction.apk
+
+Signing uses the repo secrets `KEYSTORE_B64` (base64 of the PKCS12 key) and `KEYSTORE_PASSWORD`. The key is not in the repo. Keep the backup safe, because every future update must be signed with the same key.
+
 ## Presentation mode
 
 Open any session with **Present** or **Watch**, or use `#/p/<session>/<slide>` and `#/w/<session>`.

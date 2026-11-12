@@ -105,7 +105,7 @@ function home(){
     <h1>Compiler <span>Construction</span></h1>
     <p class="lead">An animated, projector-ready course: 30 teaching sessions plus midterm and final exam preparation — from characters to tokens, tokens to parse trees, and parse trees to three-address code. Every session has Bloom's Taxonomy outcomes (Head · Heart · Hand), worked algorithms and live lab tools.</p>
     <div class="meta"><span class="chip">📅 16 weeks + final exam</span><span class="chip">🧑‍🏫 90-minute sessions</span><span class="chip">🎬 ${Object.keys(window.ICTDemos.list).length} animations</span><span class="chip">📝 4 quizzes · 4 assignments · mid & final</span></div>
-    <div class="cta"><a class="btn pri" href="#/sessions">Open sessions →</a><a class="btn watch" href="#/w/1">▶ Watch Session 1</a><a class="btn" href="#/p/1/1">🖥 Present</a><a class="btn" href="#/tools">🧪 Lab tools</a><a class="btn" href="lectures-1-3.html">📘 Lectures 1–3 (classic)</a></div>
+    <div class="cta"><a class="btn pri" href="#/sessions">Open sessions →</a><a class="btn watch" href="#/w/1">▶ Watch Session 1</a><a class="btn" href="#/p/1/1">🖥 Present</a><a class="btn" href="#/tools">🧪 Lab tools</a><a class="btn" href="lectures-1-3.html">📘 Lectures 1–3 (classic)</a>${window.AndroidApp?'':'<a class="btn" href="https://github.com/tahir8203/Compiler-Construction/releases/latest/download/CompilerConstruction.apk">📱 Android app (APK)</a>'}</div>
   </div>
   <div class="orbit" aria-hidden="true"><div class="ring">${['🔤','🌳','🤖','📒','⬇️','🏷️','🧾','🖥️'].map((e,k)=>{const a=k/8*2*Math.PI; return `<i style="left:${50+50*Math.cos(a)}%;top:${50+50*Math.sin(a)}%">${e}</i>`}).join('')}</div><div class="core">CC</div></div>
   </div></section>
