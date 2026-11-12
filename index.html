@@ -2,24 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Compiler Construction · Complete Course</title>
-<meta name="description" content="Animated, projector-ready Compiler Construction course for BS Computer Science — 32 units with slides, Bloom's Taxonomy outcomes, step-by-step algorithm animations, live lab tools, quizzes and assignments.">
+<meta name="description" content="Animated, projector-ready Compiler Construction course for BS Computer Science — a student portal with 32 units of slides, Bloom's Taxonomy outcomes, step-by-step algorithm animations, a compiler pipeline visualizer, practice quizzes, live lab tools and cheat sheets.">
 <meta name="author" content="Muhammad Tahir Mehmood">
 <meta name="theme-color" content="#070b16">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%233b82f6'/><stop offset='1' stop-color='%2322d3ee'/></linearGradient></defs><rect width='64' height='64' rx='16' fill='url(%23g)'/><text x='32' y='42' font-family='Arial' font-weight='700' font-size='26' text-anchor='middle' fill='white'>CC</text></svg>">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/styles.css?v=9">
+<link rel="stylesheet" href="assets/styles.css?v=11">
+<link rel="stylesheet" href="assets/portal.css?v=11">
 </head>
 <body>
-<header class="top"><div class="wrap">
-  <a class="brand" href="#/"><span class="logo">CC</span><span>Compiler Construction<small>BS COMPUTER SCIENCE · 3 CR</small></span></a>
-  <button class="iconbtn menubtn" id="menuBtn" aria-label="Menu">☰</button>
+<header class="top" id="top"><div class="wrap">
+  <button class="iconbtn backbtn" id="backBtn" aria-label="Back" hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <a class="brand" href="#/"><span class="logo">CC</span><span class="bt">Compiler Construction<small>BS COMPUTER SCIENCE · 3 CR</small></span></a>
+  <span class="ptitle" id="ptitle" aria-live="polite"></span>
   <nav class="nav" id="nav" aria-label="Main">
-    <a href="#/">Home</a><a href="#/sessions">Sessions</a><a href="#/tools">Lab tools</a><a href="#/assess">Assessments</a><a href="#/revision">Revision</a><a href="#/flash">Flashcards</a><a href="#/glossary">Glossary</a><a href="#/outline">Outline</a><a href="#/bookmarks">Progress</a>
+    <a href="#/">Home</a><a href="#/sessions">Sessions</a><a href="#/practice">Practice</a><a href="#/tools">Lab tools</a><a href="#/assess">Assessments</a><a href="#/revision">Revision</a><a href="#/sheets">Resources</a><a href="#/outline">Outline</a>
   </nav>
+  <button class="iconbtn" id="searchBtn" aria-label="Search the course (Ctrl+K)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
   <button class="iconbtn" id="themeBtn" aria-label="Toggle light or dark theme">☀️</button>
+  <a class="avatar" id="meBtn" href="#/me" aria-label="My profile and progress">👤</a>
 </div></header>
 <main id="app" tabindex="-1"></main>
 <footer><div class="wrap">Compiler Construction · BS Computer Science · Instructor: Muhammad Tahir Mehmood — MPhil Computer Science · Lecturer, University of Central Punjab, Okara · Headmaster, GES 53/2-L Okara · Assistant Director (P&amp;D), DEA Okara · <a href="lectures-1-3.html">Classic Lectures 1–3 page</a></div></footer>
@@ -45,12 +54,14 @@ window.COURSE = {
   policies: ["Attend all classes and read the assigned material in advance of class (not necessarily with perfect comprehension).", "Advanced preparation and class participation are crucial in discussion periods; the instructor tracks insightful and useful comments. Unproductive contributions are not rewarded.", "The dress code has to be observed; no warnings are given, and violators will be asked to leave the class and marked absent.", "Be on time and keep phones silent unless an activity needs them."]
 };
 </script>
-<script src="assets/sessions/part1.js?v=9"></script>
-<script src="assets/sessions/part2.js?v=9"></script>
-<script src="assets/sessions/part3.js?v=9"></script>
-<script src="assets/sessions/part4.js?v=9"></script>
-<script src="assets/demos.js?v=9"></script>
-<script src="assets/tools.js?v=9"></script>
-<script src="assets/app.js?v=9"></script>
+<script src="assets/sessions/part1.js?v=11"></script>
+<script src="assets/sessions/part2.js?v=11"></script>
+<script src="assets/sessions/part3.js?v=11"></script>
+<script src="assets/sessions/part4.js?v=11"></script>
+<script src="assets/demos.js?v=11"></script>
+<script src="assets/tools.js?v=11"></script>
+<script src="assets/portal-data.js?v=11"></script>
+<script src="assets/portal.js?v=11"></script>
+<script src="assets/app.js?v=11"></script>
 </body>
 </html>

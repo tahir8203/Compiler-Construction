@@ -16,6 +16,18 @@ Static site, no build step. Open `index.html` directly or serve the folder. Ever
 - **Watch mode** plays any lecture like a video. Revision dashboard, flashcards, glossary, search, bookmarks, progress tracking (localStorage), light/dark theme and print handouts.
 - The original **Lectures 1–3** page is kept at `lectures-1-3.html`.
 
+## Student portal (version 2.0)
+
+- **Dashboard home:** greeting, progress ring, XP levels, day streak, resume card, quick-access tiles, question of the day, upcoming assessments and the current week (from the semester start date in the profile).
+- **App shell:** bottom tab bar on phones (Home, Learn, Practice, Tools, Me), compact top bar with back button, page transitions, toasts, global search (Ctrl+K).
+- **Practice centre** (`#/practice`): quick quiz by topic, timed midterm and final mocks, FIRST & FOLLOW trainer, token challenge, three-address-code practice. The trainers are checked by the lab tools.
+- **Pipeline visualizer** (`#/pipeline`): type a statement and step through source → tokens → syntax tree → three-address code → quadruples → optimization → target code.
+- **Resources** (`#/sheets`): 15 cheat sheets, 26 viva questions with answers, "Compilers today" (LLVM, GCC, JIT, WebAssembly…), toolbox, commands and exam tips.
+- **Profile** (`#/me`): badges, progress by unit, personal notes per session, backup/restore code, install and share.
+- **Installable:** `manifest.webmanifest` + `sw.js` make the website installable and usable offline. Bump `VERSION` in `sw.js` together with `?v=N`.
+
+Files: `assets/portal.js` (shell and new pages), `assets/portal.css`, `assets/portal-data.js` (cheat sheets, viva, practice banks). Portal data is stored under the localStorage key `cc-portal-v1`.
+
 ## Android app
 
 `android/` is a native Android app that bundles the whole course and works offline, including progress tracking, Watch mode, the lab tools and the classic Lectures 1–3 page. The phone's back button closes a presentation and steps back through pages. Fullscreen hides the system bars, and Print opens Android's Save as PDF.

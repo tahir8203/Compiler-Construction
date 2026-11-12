@@ -15,12 +15,12 @@ try{ st = Object.assign(st, JSON.parse(localStorage.getItem(KEY)||'{}')); }catch
 const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(st)); }catch(e){} };
 
 /* ---------- theme ---------- */
-function setTheme(t){ document.documentElement.dataset.theme=t; try{localStorage.setItem('cc-theme',t);}catch(e){} $('#themeBtn').textContent = t==='light'?'🌙':'☀️'; }
+function setTheme(t){ document.documentElement.dataset.theme=t; try{localStorage.setItem('cc-theme',t);}catch(e){} $('#themeBtn').textContent = t==='light'?'🌙':'☀️'; const mt=document.querySelector('meta[name=theme-color]'); if(mt) mt.content = t==='light'?'#f4f7fd':'#070b16'; try{ window.AndroidApp&&AndroidApp.setTheme&&AndroidApp.setTheme(t==='light'); }catch(e){} }
 let theme='dark'; try{ theme = localStorage.getItem('cc-theme') || (matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'); }catch(e){}
 setTheme(theme);
 const flipTheme = () => setTheme(document.documentElement.dataset.theme==='light'?'dark':'light');
 $('#themeBtn').onclick = flipTheme;
-$('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
+if($('#menuBtn')) $('#menuBtn').onclick = () => $('#nav').classList.toggle('open');
 
 /* ---------- helpers ---------- */
 const sess = id => S.find(s=>s.id===+id);
@@ -195,11 +195,11 @@ function study(id){
       <div class="toolbar noprint" style="justify-content:space-between;margin-top:20px">${prev?`<a class="btn" href="#/s/${prev.id}">← ${esc(short(prev))}: ${esc(prev.title)}</a>`:'<span></span>'}${next?`<a class="btn pri" href="#/s/${next.id}">${esc(short(next))}: ${esc(next.title)} →</a>`:''}</div>
     </div></div></div>`;
   mountDemos(app);
-  wireChoices($('#quiz',app), {mcq:s.quiz}, (r,n)=>{ $('#score',app).textContent=`Score: ${r} / ${n} ${r===n?'🌟':''}`; st.quiz[s.id]=r+'/'+n; save(); });
-  const a=s.assessment; if(a && (a.mcq||a.tf)) wireChoices($('#assess',app), {mcq:a.mcq||[], tf:a.tf||[]}, (r,n)=>{ $('#ascore',app).textContent=`${a.title}: ${r} / ${n}`; st.quiz['a'+s.id]=r+'/'+n; save(); });
+  wireChoices($('#quiz',app), {mcq:s.quiz}, (r,n)=>{ $('#score',app).textContent=`Score: ${r} / ${n} ${r===n?'🌟':''}`; st.quiz[s.id]=r+'/'+n; save(); hook('onQuiz',s,r,n); });
+  const a=s.assessment; if(a && (a.mcq||a.tf)) wireChoices($('#assess',app), {mcq:a.mcq||[], tf:a.tf||[]}, (r,n)=>{ $('#ascore',app).textContent=`${a.title}: ${r} / ${n}`; st.quiz['a'+s.id]=r+'/'+n; save(); hook('onAssess',s,r,n); });
   $$('[data-jump]',app).forEach(x=>x.onclick=e=>{ e.preventDefault(); const t=$(x.getAttribute('href'),app); t&&t.scrollIntoView({behavior:'smooth'}); });
   $('#bm').onclick = () => { st.bm[s.id]?delete st.bm[s.id]:st.bm[s.id]=1; save(); $('#bm').textContent = st.bm[s.id]?'🔖 Bookmarked':'🔖 Bookmark'; };
-  $('#done').onclick = () => { st.done[s.id]?delete st.done[s.id]:st.done[s.id]=1; save(); $('#done').textContent = st.done[s.id]?'✔ Completed':'Mark as completed'; };
+  $('#done').onclick = () => { st.done[s.id]?delete st.done[s.id]:st.done[s.id]=1; save(); $('#done').textContent = st.done[s.id]?'✔ Completed':'Mark as completed'; hook('onDone',s,!!st.done[s.id]); };
 }
 
 /* ---------- presentation engine ---------- */
@@ -217,7 +217,7 @@ function buildPres(){
   <div class="pbody" id="pbody"></div><div class="notes" id="pnotes"></div>
   <div class="pfoot"><button class="btn sm" id="pPrev" aria-label="Previous slide">← Prev</button><span class="num" id="pnum"></span><button class="btn sm pri" id="pNext" aria-label="Next slide">Next →</button><button class="btn sm watch" id="pW" title="Play the whole deck like a video (W)">▶ Watch (W)</button><span class="spacer"></span><button class="btn sm hide-s" id="pOv">▦ Overview (O)</button><button class="btn sm" id="pN">📝 Notes (N)</button><a class="btn sm hide-s" href="#/s/${P.s.id}">📖 Study view</a></div>
   <div class="ov" id="pov"></div>`;
-  document.body.append(el); document.body.style.overflow='hidden';
+  document.body.append(el); document.body.style.overflow='hidden'; hook('onPres',true);
   $('#pPrev').onclick=()=>{ stopWatch(); go(-1); }; $('#pNext').onclick=()=>{ stopWatch(); go(1); }; $('#pW').onclick=toggleWatch;
   $('#pX').onclick=exitPres; $('#pFull').onclick=full; $('#pN').onclick=toggleNotes; $('#pOv').onclick=overview; $('#pTheme').onclick=flipTheme;
   let x0=null; el.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});
@@ -277,11 +277,11 @@ function overview(){ const o=$('#pov'); if(o.classList.contains('show')){ o.clas
   o.classList.add('show'); $('#ovx').onclick=overview; o.onclick=e=>{ const b=e.target.closest('[data-k]'); if(b){ o.classList.remove('show'); jump(+b.dataset.k); } };
   const cur=$('.cur',o); cur&&cur.focus(); }
 function exitPres(){ const id=P&&P.s.id; closePres(); location.hash = id?`#/s/${id}`:'#/'; }
-function closePres(keep){ if(P){ clearTimeout(P.wt); clearTimeout(P.wt2); } const el=$('#pres'); if(el) el.remove(); document.body.style.overflow=''; if(document.fullscreenElement && !keep) document.exitFullscreen().catch(()=>{}); P=null; }
+function closePres(keep){ if(P){ clearTimeout(P.wt); clearTimeout(P.wt2); } const el=$('#pres'); if(el) el.remove(); document.body.style.overflow=''; if(document.fullscreenElement && !keep) document.exitFullscreen().catch(()=>{}); if(P) hook('onPres',false); P=null; }
 let numBuf='';
 document.addEventListener('keydown', e=>{
   if(!P || e.ctrlKey || e.metaKey || e.altKey) return;
-  if(e.target.matches('input,textarea,select')) return;
+  if(e.target.matches && e.target.matches('input,textarea,select')) return;
   const demo=$('#pbody [data-demo]'); const k=e.key;
   if(k==='w'||k==='W'){ toggleWatch(); return; }
   if(['ArrowRight','PageDown',' ','ArrowLeft','PageUp','Home','End'].includes(k)) stopWatch();
@@ -314,7 +314,7 @@ function flash(){
   $('#fp').onclick=()=>{ i=(i-1+order.length)%order.length; draw(); }; $('#fnx').onclick=()=>{ i=(i+1)%order.length; draw(); };
   $('#fsh').onclick=()=>{ for(let a=order.length-1;a>0;a--){const b=Math.floor(Math.random()*(a+1));[order[a],order[b]]=[order[b],order[a]];} i=0; draw(); };
   $('#fs').onchange=e=>{ const v=+e.target.value; order=T.map((t,k)=>k).filter(k=>!v||T[k][2]===v); i=0; draw(); };
-  app._keys = e=>{ if(e.target.matches('select,input')) return; if(e.key===' '){e.preventDefault();$('#fc').classList.toggle('flip');} if(e.key==='ArrowRight') $('#fnx').click(); if(e.key==='ArrowLeft') $('#fp').click(); };
+  app._keys = e=>{ if(e.target.matches && e.target.matches('select,input')) return; if(e.key===' '){e.preventDefault();$('#fc').classList.toggle('flip');} if(e.key==='ArrowRight') $('#fnx').click(); if(e.key==='ArrowLeft') $('#fp').click(); };
   draw();
 }
 function assessView(){
@@ -342,7 +342,7 @@ function bookmarks(){
   <div class="card"><h3>Completed units</h3><div class="bar"><i style="width:${pct()}%"></i></div><p class="tiny">${S.filter(s=>st.done[s.id]).length} of ${S.length} units marked complete.</p></div><br>
   <div class="card"><h3>Quiz results</h3><div class="tblwrap"><table class="cal"><tr><th>Unit</th><th>Knowledge check</th><th>Assessment</th></tr>${S.filter(s=>st.quiz[s.id]||st.quiz['a'+s.id]).map(s=>`<tr><td><a href="#/s/${s.id}">${esc(short(s))}: ${esc(s.title)}</a></td><td>${st.quiz[s.id]||'—'}</td><td>${st.quiz['a'+s.id]||'—'}</td></tr>`).join('')||'<tr><td colspan="3" class="muted">No quizzes attempted yet.</td></tr>'}</table></div></div><br>
   <button class="btn" id="rst">Reset my progress</button></div>`;
-  $('#rst').onclick=()=>{ if(confirm('Reset all progress, bookmarks and quiz scores on this device?')){ st=blank(); save(); bookmarks(); } };
+  $('#rst').onclick=()=>{ if(confirm('Reset all progress, bookmarks and quiz scores on this device?')){ st=blank(); save(); hook('reset'); bookmarks(); } };
 }
 function notFound(){ app.innerHTML=`<div class="wrap shead"><h1>Page not found</h1><a class="btn" href="#/">Go home</a></div>`; }
 
@@ -354,12 +354,15 @@ function route(){
   if(h[0]==='w'){ present(h[1],1); history.replaceState(null,'',`#/p/${h[1]}/1`); startWatch(); return; }
   if(P) closePres();
   app._keys=null;
-  ({'':home, sessions:sessionsView, s:()=>study(h[1]), glossary, flash, outline, bookmarks, assess:assessView, revision, tools:()=>window.CCTools.render(app)}[h[0]]||notFound)();
+  const PR=(window.CCPortal&&window.CCPortal.routes)||{};
+  (Object.assign({'':home, sessions:sessionsView, s:()=>study(h[1]), glossary, flash, outline, bookmarks, assess:assessView, revision, tools:()=>window.CCTools.render(app)},PR)[h[0]]||notFound)(h);
+  hook('afterRoute',h);
   revealOnScroll();
   $$('#nav a').forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#/'+h[0]));
   window.scrollTo(0,0);
 }
 document.addEventListener('keydown',e=>{ if(!P && app._keys) app._keys(e); });
+function hook(n,...a){ try{ const p=window.CCPortal; if(p&&p[n]) return p[n](...a); }catch(e){ console.error(e); } }
+window.CCApp = { deck, sessions:S, get st(){return st}, save, sess, label, short, esc, strip, pct, kindChip, instructorCard, flipTheme, setTheme, allTerms, mcqBlock, wireChoices, mountDemos, revealOnScroll, route, resetAll(){ st=blank(); save(); } };
 addEventListener('hashchange', route); route();
-window.CCApp = { deck, sessions:S };
 })();

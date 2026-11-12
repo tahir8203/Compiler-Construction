@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build the signed APK on this PC (same tools as the DEA app: C:\dev\jdk21, C:\dev\android-sdk, cached Gradle 9.3.1).
-# Usage (Git Bash, from the repo root):  bash android/build-local.sh 1.0.1 2
+# Usage (Git Bash, from the repo root):  bash android/build-local.sh 2.0.1 3
 set -euo pipefail
 VER="${1:-1.0.0}"; CODE="${2:-1}"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"

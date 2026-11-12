@@ -2,14 +2,18 @@ package com.tahir.compilerconstruction;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.print.PrintAttributes;
 import android.print.PrintManager;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.webkit.JavascriptInterface;
@@ -41,8 +45,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         root = new FrameLayout(this);
-        root.setBackgroundColor(Color.parseColor("#070b16"));
         web = new WebView(this);
+        web.setVisibility(View.INVISIBLE); // the splash (window background) shows until the first page is ready
         web.setBackgroundColor(Color.parseColor("#070b16"));
         root.addView(web, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -63,7 +67,7 @@ public class MainActivity extends Activity {
         s.setTextZoom(100);
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
-        s.setUserAgentString(s.getUserAgentString() + " CCCourseApp/1.0");
+        s.setUserAgentString(s.getUserAgentString() + " CCCourseApp/2.0");
 
         web.addJavascriptInterface(new Bridge(), "AndroidApp");
 
@@ -86,6 +90,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                if (web.getVisibility() != View.VISIBLE) web.setVisibility(View.VISIBLE);
                 // window.print() does nothing in a WebView: route it to Android printing (Save as PDF).
                 view.evaluateJavascript(
                         "window.print=function(){AndroidApp.print(document.title||'Compiler Construction')};", null);
@@ -140,6 +145,17 @@ public class MainActivity extends Activity {
         }
     }
 
+    @SuppressWarnings("deprecation")
+    private void applyBars(boolean light) {
+        int c = Color.parseColor(light ? "#f4f7fd" : "#070b16");
+        getWindow().setStatusBarColor(c);
+        getWindow().setNavigationBarColor(c);
+        View d = getWindow().getDecorView();
+        int f = d.getSystemUiVisibility();
+        int lightFlags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | (Build.VERSION.SDK_INT >= 26 ? View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0);
+        d.setSystemUiVisibility(light ? (f | lightFlags) : (f & ~lightFlags));
+    }
+
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
@@ -149,7 +165,7 @@ public class MainActivity extends Activity {
         }
         // Presentation open -> close it (same as pressing Esc). Otherwise go back through the course pages.
         web.evaluateJavascript(
-                "(function(){var p=document.getElementById('pres');if(p){"
+                "(function(){var w=document.querySelector('.sheetw');if(w){w.click();return 'ov';}var p=document.getElementById('pres');if(p){"
                         + "var o=document.getElementById('pov');if(o&&o.classList.contains('show')){o.classList.remove('show');return 'ov';}"
                         + "document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));return 'pres';}"
                         + "return location.pathname.indexOf('index.html')>=0&&(location.hash===''||location.hash==='#/')?'home':'page';})()",
@@ -193,6 +209,56 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isApp() {
             return true;
+        }
+
+        /** Short vibration for taps, right and wrong answers. */
+        @JavascriptInterface
+        @SuppressWarnings("deprecation")
+        public void haptic(final int ms) {
+            try {
+                Vibrator v = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+                if (v == null || !v.hasVibrator()) return;
+                int d = Math.max(5, Math.min(ms, 60));
+                if (Build.VERSION.SDK_INT >= 26) v.vibrate(VibrationEffect.createOneShot(d, VibrationEffect.DEFAULT_AMPLITUDE));
+                else v.vibrate(d);
+            } catch (Exception ignored) {
+            }
+        }
+
+        /** Match the status and navigation bars to the portal's light or dark theme. */
+        @JavascriptInterface
+        public void setTheme(final boolean light) {
+            runOnUiThread(() -> applyBars(light));
+        }
+
+        /** Keep the screen on while a presentation or Watch mode is open. */
+        @JavascriptInterface
+        public void keepAwake(final boolean on) {
+            runOnUiThread(() -> {
+                if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            });
+        }
+
+        /** "landscape" locks slides to landscape; anything else returns to automatic rotation. */
+        @JavascriptInterface
+        public void orient(final String mode) {
+            runOnUiThread(() -> setRequestedOrientation("landscape".equals(mode)
+                    ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                    : ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED));
+        }
+
+        @JavascriptInterface
+        public void share(final String text) {
+            runOnUiThread(() -> {
+                try {
+                    Intent i = new Intent(Intent.ACTION_SEND);
+                    i.setType("text/plain");
+                    i.putExtra(Intent.EXTRA_TEXT, text);
+                    startActivity(Intent.createChooser(i, "Share"));
+                } catch (Exception ignored) {
+                }
+            });
         }
     }
 }
