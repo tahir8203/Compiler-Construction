@@ -1,5 +1,7 @@
 # Compiler Construction — Complete Animated Course
 
+> **New here or continuing the work?** Start with [`START-HERE.md`](START-HERE.md). The full handoff is in [`docs/HANDOFF.md`](docs/HANDOFF.md).
+
 An animated, projector-ready course website for **Compiler Construction**, BS Computer Science, 3 credit hours, 17 weeks (Mid Term in Week 9, Final Term in Week 17).
 
 Instructor: **Muhammad Tahir Mehmood** — MPhil Computer Science · Lecturer, University of Central Punjab, Okara · Headmaster, GES 53/2-L Okara · Assistant Director (P&D), DEA Okara.
@@ -68,6 +70,10 @@ assets/sessions/part1-4.js Course content as data
 assets/instructor.jpg      Instructor photo
 docs/MASTER-PROMPT.md      Course-building prompt
 docs/PROGRESS.md           Progress checklist
+docs/HANDOFF.md            Full technical handoff
+docs/handover/             Chat summary and course workflow notes
+docs/CC-Course-Outline.pdf Official outline (scanned)
+START-HERE.md              Where to start
 ```
 
 To edit a session, change the data in `assets/sessions/*.js`. After editing assets, bump the `?v=` number in `index.html` so browsers fetch the new files.
