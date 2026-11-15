@@ -450,3 +450,10 @@ pre.code,.code{font-family:var(--mono);background:#0a1020;color:#dbe7ff;border:1
 .fig img{display:block;margin:0 auto;max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
 .fig figcaption{font-size:.85em;opacity:.75;margin-top:6px}
 .pres .fig img{max-height:48vh;width:auto}
+
+/* hover / tap definitions: <span class="def" tabindex="0" data-tip="...">term</span> */
+.def{position:relative;cursor:help;border-bottom:2px dotted var(--cy);font-weight:600;outline:none}
+.def:hover,.def:focus{color:var(--pri)}
+.def::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 8px);width:max-content;max-width:min(460px,80vw);background:#0f172a;color:#e2e8f0;border:1px solid var(--cy);border-radius:10px;padding:8px 12px;font-size:.78em;font-weight:400;line-height:1.45;white-space:normal;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s;z-index:60;pointer-events:none}
+.def:hover::after,.def:focus::after{opacity:1;visibility:visible;transform:none}
+li:has(.def:hover),li:has(.def:focus),.p:has(.def:hover),.p:has(.def:focus){position:relative;z-index:20}
