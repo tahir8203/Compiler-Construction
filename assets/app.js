@@ -63,6 +63,7 @@ function body(x){
   if(x.p) html+=`<div class="p">${x.p}</div>`;
   if(x.pts) html+=`<ul class="pts">${x.pts.map(p=>`<li><span class="ic">${p[0]}</span><span>${p[1]}</span></li>`).join('')}</ul>`;
   if(x.cmp) html+=`<div class="cmp">${x.cmp.map(c=>`<div><h4>${c[0]}</h4><ul>${c[1].map(i=>`<li>${i}</li>`).join('')}</ul></div>`).join('')}</div>`;
+  if(x.img) html+=`<figure class="fig"><img src="${x.img.src}" alt="${esc(x.img.alt||'')}" loading="lazy" decoding="async">${x.img.cap?`<figcaption>${x.img.cap}</figcaption>`:''}</figure>`;
   if(x.ex) html+=`<div class="ex"><b>Example:</b> ${x.ex}</div>`;
   if(x.code) html+=`<pre class="code">${x.code}</pre>`;
   if(x.psy) html+=`<div class="ex psy"><b>⚙️ In real compilers:</b> ${x.psy}</div>`;

@@ -444,3 +444,9 @@ pre.code,.code{font-family:var(--mono);background:#0a1020;color:#dbe7ff;border:1
 .pres .title h2{font-size:clamp(30px,4.3vw,66px);line-height:1.08}
 .pres .title .bigicon{font-size:clamp(56px,8.5vw,130px)}
 @media (max-width:900px){.pres .two.title{grid-template-columns:1fr}.pres .title .bigicon{display:none}}
+
+/* slide figures (img field) */
+.fig{margin:12px 0;text-align:center}
+.fig img{display:block;margin:0 auto;max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+.fig figcaption{font-size:.85em;opacity:.75;margin-top:6px}
+.pres .fig img{max-height:48vh;width:auto}
