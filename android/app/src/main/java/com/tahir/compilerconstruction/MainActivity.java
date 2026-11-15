@@ -3,6 +3,7 @@ package com.tahir.compilerconstruction;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -209,6 +210,28 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isApp() {
             return true;
+        }
+
+        /** Installed versionCode, used by the portal to check for updates. */
+        @JavascriptInterface
+        @SuppressWarnings("deprecation")
+        public int versionCode() {
+            try {
+                PackageInfo p = getPackageManager().getPackageInfo(getPackageName(), 0);
+                return Build.VERSION.SDK_INT >= 28 ? (int) p.getLongVersionCode() : p.versionCode;
+            } catch (Exception e) {
+                return 0;
+            }
+        }
+
+        /** Installed versionName, e.g. "2.0.1". */
+        @JavascriptInterface
+        public String versionName() {
+            try {
+                return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+            } catch (Exception e) {
+                return "";
+            }
         }
 
         /** Short vibration for taps, right and wrong answers. */

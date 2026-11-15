@@ -246,3 +246,12 @@ tr.pv-h{display:table-row}
 @media print{.tabbar,#toasts,#rprog,.pvctl,.seg,.sheetw,.notes,.confetti{display:none!important}body{padding-bottom:0}.sheetc{break-inside:avoid}details.sheetc>.shb{display:block}}
 .prof .grow{flex:1 1 190px}
 @media (max-width:600px){.mini{min-height:240px}.mp-body{min-height:130px}.pav{width:60px;height:60px;font-size:26px}}
+
+/* app update: dot on the Me tab, highlighted profile row, popup notes */
+.tab.updot,#meBtn.updot{position:relative}
+.tab.updot::after,#meBtn.updot::after{content:'';position:absolute;top:6px;right:calc(50% - 16px);width:9px;height:9px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px var(--bg)}
+#meBtn.updot::after{top:-2px;right:-2px}
+.srow.hasupd{background:color-mix(in srgb,var(--pri) 10%,transparent);border-radius:12px;padding-left:8px;padding-right:8px}
+.srow small .upnew{color:var(--pri);font-weight:700}
+.ob.upd .updnotes{margin:6px 0 12px;padding-left:20px}
+.ob.upd .updnotes li{margin:3px 0}

@@ -194,6 +194,8 @@ The site is now a student portal with an app feel. New files: `assets/portal.js`
   gh release create app-v1.0.1 "D:/Fall 2026/Compiler/CompilerConstruction.apk" -R tahir8203/Compiler-Construction --title "Compiler Construction app 1.0.1" --notes "..."
   ```
   The website button always points to the latest release.
+- **In-app update notice (from 2.0.1):** the app reads `app-version.json` from the website on start-up and from **Me → App updates**. If its `versionCode` is higher than the installed one, a pop-up offers the download (Later hides it for a day) and the Me tab shows a red dot. `vercel.json` adds the CORS header the app needs to read that file.
+  **After publishing a release, update `app-version.json`** (versionCode, versionName, date, notes) and push. Only do this once the release APK is uploaded, otherwise phones are sent to the old file.
 - **GitHub Actions:** the cloud build in `.github/workflows/android.yml` is set up. The repo secrets `KEYSTORE_B64` and `KEYSTORE_PASSWORD` are set. It is **blocked because the GitHub account is locked for billing** (as of 2026-11-12), so use the local build.
 
 ## 6. Problems already solved (don't repeat them)

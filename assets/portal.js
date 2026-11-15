@@ -42,11 +42,51 @@ function animate(root){
   $$('[data-count]',root).forEach(el=>{ const n=+el.dataset.count, suf=el.dataset.suf||''; if(!n){ el.textContent='0'+suf; return; } const t0=performance.now(); const tick=t=>{ const k=Math.min(1,(t-t0)/900); el.textContent=Math.round(n*(1-Math.pow(1-k,3)))+suf; if(k<1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
 }
 function sheet(html, cls){ const w=document.createElement('div'); w.className='sheetw '+(cls||''); w.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`; w.addEventListener('click',e=>{ if(e.target===w||e.target.closest('[data-close]')) closeSheet(w); }); document.body.append(w); requestAnimationFrame(()=>w.classList.add('open')); return w; }
-function closeSheet(w){ if(!w) return; w.classList.remove('open'); setTimeout(()=>w.remove(),260); }
+function closeSheet(w){ if(!w) return; w.classList.remove('open'); setTimeout(()=>{ w.remove(); if(updPending) setTimeout(updPopup,400); },260); }
 const shuffle=a=>{ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 let cleanups=[]; const onLeave=f=>cleanups.push(f);
 function bank(filter){ const out=[]; A().sessions.forEach(s=>{ if(filter&&!filter(s)) return; (s.quiz||[]).forEach(q=>out.push({q,s})); ((s.assessment&&s.assessment.mcq)||[]).forEach(q=>out.push({q,s})); }); return out; }
+
+/* ---------- Android app updates ----------
+   The website publishes app-version.json. The app compares its own versionCode (AndroidApp.versionCode)
+   with it on start-up and from Profile → App updates. The download link opens in the phone's browser. */
+const VURL=(location.hostname==='appassets.androidplatform.net'?SITE.replace(/\/$/,'')+'/':'')+'app-version.json';
+const UK='cc-update-v1';
+let upd={state:'idle'}, updPending=false;
+function appVer(){ try{ if(IN_APP()&&AndroidApp.versionCode){ const c=+AndroidApp.versionCode(); if(c>0) return {code:c,name:String(AndroidApp.versionName?AndroidApp.versionName():'')}; } }catch(e){} return null; }
+function updMem(){ try{ return JSON.parse(localStorage.getItem(UK))||{}; }catch(e){ return {}; } }
+function updSave(o){ try{ localStorage.setItem(UK,JSON.stringify(Object.assign(updMem(),o))); }catch(e){} }
+function ago(t){ if(!t) return ''; const m=Math.round((Date.now()-t)/6e4); return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'; }
+function checkUpdate(manual){
+  const cur=appVer(); if(!cur) return;
+  upd={state:'checking',cur}; updUI();
+  fetch(VURL+'?t='+Date.now(),{cache:'no-store'}).then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(v=>{
+    if(!v||!(+v.versionCode)) throw 0;
+    upd={state:+v.versionCode>cur.code?'new':'latest',cur,v}; updSave({at:Date.now()}); updUI();
+    if(upd.state==='new'){ const m=updMem(); if(manual||!(m.later===+v.versionCode&&Date.now()-(m.laterAt||0)<864e5)) updPopup(); }
+    else if(manual) toast('✓ You have the latest version');
+  }).catch(()=>{ upd={state:'offline',cur}; updUI(); if(manual) toast('Could not check. Connect to the internet and try again.'); });
+}
+function updPopup(){
+  if(upd.state!=='new') return;
+  if(document.body.classList.contains('presenting')||$('.sheetw')){ updPending=true; return; }
+  updPending=false; const v=upd.v, notes=Array.isArray(v.notes)?v.notes:[];
+  const w=sheet(`<div class="ob upd"><div class="oblogo">⬆</div><h2>Update available</h2>
+    <p class="muted">Version <b>${esc(v.versionName||'')}</b> is ready${v.date?' ('+esc(v.date)+')':''}. You have ${esc(upd.cur.name||'an older version')}.</p>
+    ${notes.length?`<b class="tiny">WHAT'S NEW</b><ul class="updnotes">${notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:''}
+    <div class="toolbar"><a class="btn pri" id="upGo" href="${esc(v.apk||APK)}">⬇ Download update</a><button class="btn" id="upLater" type="button">Later</button></div>
+    <p class="tiny">Your progress, notes and scores are kept. After the download finishes, open the file and tap <b>Update</b>. If Android asks, allow your browser to install apps.</p></div>`);
+  $('#upGo',w).onclick=()=>{ haptic(15); setTimeout(()=>closeSheet(w),300); };
+  $('#upLater',w).onclick=()=>{ updSave({later:+v.versionCode,laterAt:Date.now()}); closeSheet(w); toast('You can update any time from <b>Me → App updates</b>'); };
+}
+function updUI(){
+  const t=$('#tabbar .tab[data-t="me"]'); if(t) t.classList.toggle('updot',upd.state==='new');
+  const b=$('#meBtn'); if(b) b.classList.toggle('updot',upd.state==='new');
+  const r=$('#sUpd'); if(!r) return; const c=upd.cur||appVer()||{}, nm=c.name?'Version '+esc(c.name):'This app';
+  const s={checking:`${nm} · checking…`, new:`<b class="upnew">Version ${esc(upd.v&&upd.v.versionName||'')} is available. Tap to update.</b>`, latest:`${nm} · up to date (checked ${ago(updMem().at)})`, offline:`${nm} · could not check (offline)`}[upd.state]||`${nm} · tap to check for updates`;
+  $('small',r).innerHTML=s; r.classList.toggle('hasupd',upd.state==='new');
+}
 
 /* ---------- shell: tab bar, toasts, header ---------- */
 const ICON={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',learn:'<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-4a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h5z"/>',practice:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/>',tools:'<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 14h9"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'};
@@ -91,6 +131,7 @@ function afterRoute(h){
   animate(el);
   if(jump){ const j=jump; jump=null; setTimeout(()=>{ const t=document.getElementById(j); if(t){ t.scrollIntoView({block:'start'}); t.classList.add('flashhi'); setTimeout(()=>t.classList.remove('flashhi'),1600); } },120); }
   if(k==='' && !ps.name && !ps.skip) setTimeout(onboard,500);
+  if(upd.state==='new') updUI();
 }
 let jump=null;
 
@@ -112,7 +153,7 @@ function enhanceRevision(){ const tb=$('.shead .toolbar',app()); if(tb && !$('#r
 function onDone(s,on){ haptic(18); if(on){ if(!once('d'+s.id,()=>addXP(50,'Session completed'))) toast('✔ Marked as completed'); confetti(); const all=A().sessions.every(x=>A().st.done[x.id]); if(all) setTimeout(()=>toast('🏆 Whole course completed. Well done!'),900); } else toast('Marked as not completed'); }
 function onQuiz(s,r,n){ haptic(14); once('k'+s.id,()=>{ if(r) addXP(r*10,`Knowledge check ${r}/${n}`); }); if(r===n) confetti(); }
 function onAssess(s,r,n){ once('a'+s.id,()=>{ if(r) addXP(r*5,`${s.assessment.title} ${r}/${n}`); }); }
-function onPres(on){ document.body.classList.toggle('presenting',on); try{ if(IN_APP()&&AndroidApp.keepAwake) AndroidApp.keepAwake(!!on); if(!on&&IN_APP()&&AndroidApp.orient) AndroidApp.orient('auto'); }catch(e){}
+function onPres(on){ document.body.classList.toggle('presenting',on); if(!on&&updPending) setTimeout(updPopup,600); try{ if(IN_APP()&&AndroidApp.keepAwake) AndroidApp.keepAwake(!!on); if(!on&&IN_APP()&&AndroidApp.orient) AndroidApp.orient('auto'); }catch(e){}
   if(on && IN_APP() && AndroidApp.orient){ const hd=$('#pres .phead'); if(hd && !$('#pRot',hd)){ const b=document.createElement('button'); b.className='iconbtn'; b.id='pRot'; b.title='Rotate screen'; b.setAttribute('aria-label','Rotate screen'); b.textContent='⟳'; let land=false; b.onclick=()=>{ land=!land; AndroidApp.orient(land?'landscape':'auto'); }; const x=$('#pX',hd); x?x.before(b):hd.append(b); } } }
 function reset(){ ps=Object.assign(blank(),{name:ps.name,roll:ps.roll,start:ps.start,skip:ps.skip}); save(); }
 
@@ -359,15 +400,17 @@ function me(){
    <section class="sec"><h2>Settings</h2><div class="card setl">
      <button class="srow" id="sTheme"><span>🌗</span><span class="grow"><b>Appearance</b><small>Switch between dark and light</small></span><span>›</span></button>
      ${IN_APP()?'':`<button class="srow" id="sInst"><span>📲</span><span class="grow"><b>Install on this device</b><small>Add the portal to your home screen; works offline</small></span><span>›</span></button><a class="srow" href="${APK}"><span>🤖</span><span class="grow"><b>Download the Android app</b><small>APK file, works fully offline</small></span><span>›</span></a>`}
+     ${IN_APP()&&appVer()?`<button class="srow" id="sUpd"><span>⬆️</span><span class="grow"><b>App updates</b><small></small></span><span>›</span></button>`:''}
      <button class="srow" id="sShare"><span>📤</span><span class="grow"><b>Share with classmates</b><small>Send the portal link</small></span><span>›</span></button>
      <button class="srow" id="sBak"><span>💾</span><span class="grow"><b>Backup or move my progress</b><small>Copy a backup code, or restore one on a new phone</small></span><span>›</span></button>
      <a class="srow" href="#/outline"><span>🗓️</span><span class="grow"><b>Course outline & policies</b><small>Calendar, books, class rules</small></span><span>›</span></a>
      <a class="srow" href="lectures-1-3.html"><span>📘</span><span class="grow"><b>Classic Lectures 1–3 page</b><small>The original first three lectures</small></span><span>›</span></a>
      <button class="srow danger" id="sReset"><span>🗑️</span><span class="grow"><b>Reset my progress</b><small>Clears completion, scores, XP and notes on this device</small></span><span>›</span></button>
-   </div><p class="tiny" style="text-align:center;margin-top:14px">Compiler Construction portal · version 2.0 · Instructor: Muhammad Tahir Mehmood</p></section></div>`;
+   </div><p class="tiny" style="text-align:center;margin-top:14px">Compiler Construction ${IN_APP()&&appVer()?'app · version '+esc(appVer().name):'portal · version 2.0'} · Instructor: Muhammad Tahir Mehmood</p></section></div>`;
   $('#pedit').onclick=()=>{ const w=sheet(`<div class="ob"><h2>Edit profile</h2><label>Name<input id="obN" type="text" maxlength="40" value="${esc(ps.name)}"></label><label>Roll number<input id="obR" type="text" maxlength="30" value="${esc(ps.roll)}"></label><label>Semester start date<input id="obS" type="date" value="${esc(ps.start)}"></label><div class="toolbar"><button class="btn pri" id="obGo">Save</button><button class="btn" data-close>Cancel</button></div></div>`);
     $('#obGo',w).onclick=()=>{ ps.name=$('#obN',w).value.trim(); ps.roll=$('#obR',w).value.trim(); ps.start=$('#obS',w).value; ps.skip=1; save(); closeSheet(w); me(); afterRoute(['me']); toast('Profile saved'); }; };
   $('#sTheme').onclick=()=>{ a.flipTheme(); haptic(); };
+  const su=$('#sUpd'); if(su){ su.onclick=()=>{ haptic(); if(upd.state==='new') updPopup(); else checkUpdate(true); }; updUI(); }
   const si=$('#sInst'); if(si) si.onclick=()=>{ if(installEvt){ installEvt.prompt(); installEvt=null; } else sheet(`<div class="ob"><h2>Install the portal</h2><p><b>Android (Chrome):</b> open the ⋮ menu and choose “Add to Home screen” or “Install app”.</p><p><b>iPhone (Safari):</b> tap the Share button, then “Add to Home Screen”.</p><p><b>Computer (Chrome / Edge):</b> click the install icon at the right of the address bar.</p><div class="toolbar"><button class="btn pri" data-close>OK</button></div></div>`); };
   $('#sShare').onclick=()=>{ const text='Compiler Construction course portal: animated lectures, practice quizzes, lab tools and cheat sheets. '+SITE; try{ if(IN_APP()&&AndroidApp.share){ AndroidApp.share(text); return; } if(navigator.share){ navigator.share({title:'Compiler Construction',text,url:SITE}).catch(()=>{}); return; } }catch(e){} copy(SITE,'Link copied'); };
   $('#sBak').onclick=()=>{ let code=''; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({c:a.st,p:ps})))); }catch(e){}
@@ -403,5 +446,6 @@ function openSearch(){ if($('.sheetw.srch')) return; sIndex=sIndex||buildIndex()
 }
 
 buildShell();
-window.CCPortal={ routes:{'':home, practice, pipeline, sheets, me}, afterRoute, onDone, onQuiz, onAssess, onPres, reset, toast, confetti, openSearch };
+if(appVer()) setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); else { upd={state:'offline',cur:appVer()}; updUI(); } },3500);
+window.CCPortal={ routes:{'':home, practice, pipeline, sheets, me}, checkUpdate, afterRoute, onDone, onQuiz, onAssess, onPres, reset, toast, confetti, openSearch };
 })();
