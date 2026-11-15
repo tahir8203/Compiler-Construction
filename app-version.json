@@ -1,9 +1,12 @@
 {
-  "versionCode": 2,
-  "versionName": "2.0.0",
-  "date": "2026-11-12",
+  "versionCode": 3,
+  "versionName": "2.0.1",
+  "date": "2026-11-15",
   "apk": "https://github.com/tahir8203/Compiler-Construction/releases/latest/download/CompilerConstruction.apk",
   "notes": [
-    "Student portal with dashboard, practice centre and pipeline visualizer"
+    "Update notice: the app tells you when a new version is ready",
+    "New Session 1 slides: bytecode, the JVM and JIT hot code, Java pipeline diagram",
+    "Tap underlined words for definitions",
+    "Animated lab: C vs Python speed race and error behaviour"
   ]
 }
