@@ -1,5 +1,5 @@
 /* Offline support for the Compiler Construction portal. Bump VERSION with the ?v= number in index.html. */
-const VERSION = 'cc-v11';
+const VERSION = 'cc-v12';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'assets/styles.css?v=11', 'assets/portal.css?v=11',
   'assets/sessions/part1.js?v=11', 'assets/sessions/part2.js?v=11', 'assets/sessions/part3.js?v=11', 'assets/sessions/part4.js?v=11',
   'assets/demos.js?v=11', 'assets/tools.js?v=11', 'assets/portal-data.js?v=11', 'assets/portal.js?v=11', 'assets/app.js?v=11',
