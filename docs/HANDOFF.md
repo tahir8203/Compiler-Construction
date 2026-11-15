@@ -1,7 +1,7 @@
 # Compiler Construction: web portal and mobile app handoff
 
 This file records everything needed to continue the Compiler Construction course website and Android app in a new chat.
-Last updated: 2026-11-13.
+Last updated: 2026-11-15.
 
 **This file lives in the GitHub repo** (`docs/HANDOFF.md`) and is the main copy. Start with `START-HERE.md` in the repo root. Paths below like `D:\Fall 2026\Compiler` refer to the instructor's laptop; the repo itself is `site\` there.
 
@@ -21,7 +21,7 @@ Last updated: 2026-11-13.
 | Vercel project / team | `prj_O3AcHfiP9f4CxiMk4lfF7bzcJf2b` / `team_ecFlVoTYGOiRvqFH4V7yLhif`. Every push to `main` deploys automatically. |
 | Android APK (latest build) | `D:\Fall 2026\Compiler\CompilerConstruction.apk` |
 | APK download (public) | https://github.com/tahir8203/Compiler-Construction/releases/latest/download/CompilerConstruction.apk |
-| Release page | https://github.com/tahir8203/Compiler-Construction/releases/tag/app-v2.0.0 |
+| Release page | https://github.com/tahir8203/Compiler-Construction/releases/tag/app-v2.0.1 |
 | App signing key (keep safe; never put it in git) | `D:\Fall 2026\Compiler\android-signing\cc-course-release.p12`, with its password in `KEYSTORE-PASSWORD.txt` in the same folder |
 | Course outline (scanned PDF) | `D:\Fall 2026\Compiler\CC Course Outline.pdf` |
 | Original Lectures 1–3 pages | `Compiler_Construction_Lectures_1_2_3*.html` in the main folder. The live copy is `site/lectures-1-3.html`. |
@@ -142,7 +142,7 @@ Swiping changes slides on touch screens.
 
 **Rules when editing:**
 1. Edit content in `assets/sessions/*.js`.
-2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=11**. Bump `VERSION` in `sw.js` to the same number.
+2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=16**. Bump `VERSION` in `sw.js` to the same number.
 3. Commit and push to `main`. Vercel deploys within about a minute.
 4. Keep Bloom's Taxonomy Head/Heart/Hand outcomes on every session.
 
@@ -171,7 +171,7 @@ The site is now a student portal with an app feel. New files: `assets/portal.js`
   - `window.print()` opens Android printing (Save as PDF).
   - External links open in the phone's browser.
   - The website's "📱 Android app (APK)" button is hidden inside the app, which checks for `window.AndroidApp`.
-- **Version:** 2.0.0 (versionCode 2) built 2026-11-12; published as GitHub release `app-v2.0.0` (the website button serves it). minSdk 23 (Android 6), targetSdk 34, compileSdk 36. AGP 9.1.0, Gradle 9.3.1, `androidx.webkit:webkit:1.12.1`.
+- **Version:** 2.0.1 (versionCode 3) built 2026-11-15; published as GitHub release `app-v2.0.1` (the website button serves it). minSdk 23 (Android 6), targetSdk 34, compileSdk 36. AGP 9.1.0, Gradle 9.3.1, `androidx.webkit:webkit:1.12.1`.
 - **Signing:** PKCS12 key with alias `cc-course`. Certificate SHA-256 `4958be8c…a959` (CN=Muhammad Tahir Mehmood). **Every update must use this same key**, or phones refuse the update.
 - **Icon:** a blue-cyan gradient tile with "CC". The PNGs are in `res/mipmap-*`; the adaptive icon is in `mipmap-anydpi-v26`.
 - **Build on this PC:** it reuses the toolchain from the DEA app: `C:\dev\jdk21`, `C:\dev\android-sdk` (build-tools 36.0.0, platforms 34–36), and Gradle 9.3.1 from `%USERPROFILE%\.gradle\wrapper\dists`.
