@@ -857,6 +857,66 @@ D.switchtr = codewalk('Translating a switch statement',
    'The tests are placed <b>after</b> the bodies so they can be generated in one pass once all case values are known.',
    '','No value matched → default.','Many cases → use a <b>jump table</b> (index by t) or a hash table instead of a chain of tests.'],
   [[],[0,1],[2,3],[4,5],[6,7],[8],[9],[10],[8,9,10]]);
+/* Lab race: compile (C) vs interpret (Python) the same program, then two kinds of error */
+D.labrace = { title:'Lab: sum 1…10,000,000 in C and in Python', caps:[
+  'Same task, two languages: add the numbers 1 to 10,000,000. The answer is <b>50000005000000</b>.',
+  '<b>C:</b> <code>gcc -O2 sum.c -o sum</code> translates the <i>whole</i> file once and writes the executable <code>sum</code>. <b>Python:</b> no build step; <code>python</code> reads <code>sum.py</code> directly.',
+  'Run both and time them. The C program is already machine code; Python executes bytecode one instruction at a time.',
+  'Same answer, very different speed: the compiled program is roughly <b>100× faster</b> here. (Times vary by PC: measure your own.)',
+  'Now break the <b>last line</b> with a syntax error: a missing <code>;</code> in C, a missing <code>)</code> in Python.',
+  '<b>Both report it before running.</b> gcc writes no executable. Python compiles the whole file to bytecode first, so even <code>summing...</code> is never printed.',
+  'A different error: a misspelt name <code>totl</code>. gcc catches it at <b>compile time</b>. Python only finds it when it <b>reaches</b> line 5, after doing all the work.',
+  'Summary: a compiler checks the whole program before it runs. An interpreter reports syntax errors first, but other errors only when execution gets there.'],
+  build(s){
+    const C=['#include &lt;stdio.h&gt;','int main(void) {','  long long s = 0;','  for (long i = 1; i &lt;= 10000000; i++)','    s += i;','  printf("%lld\\n", s);','  return 0;','}'];
+    const P=['print("summing...")','s = 0','for i in range(1, 10_000_001):','    s += i','print(s)'];
+    const pane=(id,name,lines)=>`<div class="lr-pane" id="${id}"><div class="lr-head"><b>${name}</b><span class="lr-badge"></span></div><pre class="lr-code">${lines.map((l,k)=>`<span class="lr-ln" data-k="${k}"><i>${k+1}</i>${l}</span>`).join('')}</pre><div class="lr-term"><div class="lr-cmd"></div><div class="lr-bar"><i></i></div><div class="lr-out"></div></div></div>`;
+    s.innerHTML=`<div class="labrace">${pane('lrc','C · sum.c',C)}${pane('lrp','Python · sum.py',P)}</div><table class="lr-sum hid"><tr><th></th><th>C (compiled)</th><th>Python (interpreted)</th></tr><tr><td>Build step</td><td>gcc, once</td><td>none</td></tr><tr><td>Run time</td><td>≈ 0.01 s</td><td>≈ 1.3 s</td></tr><tr><td>Syntax error</td><td>reported, no executable</td><td>reported before running</td></tr><tr><td>Misspelt name</td><td>reported at compile time</td><td>found only when line 5 runs</td></tr></table>`;
+    const g=id=>{ const p=s.querySelector('#'+id); return {p, lines:[...p.querySelectorAll('.lr-ln')], cmd:p.querySelector('.lr-cmd'), bar:p.querySelector('.lr-bar'), fill:p.querySelector('.lr-bar i'), out:p.querySelector('.lr-out'), badge:p.querySelector('.lr-badge')}; };
+    return {c:g('lrc'), p:g('lrp'), lr:s.querySelector('.labrace'), sum:s.querySelector('.lr-sum'), C, P, t:[]};
+  },
+  show(x,i){
+    x.t.forEach(clearTimeout); x.t=[];
+    const lastC=x.c.lines[5], lastP=x.p.lines[4];
+    lastC.innerHTML = '<i>6</i>' + (i>=6 ? '  printf("%lld\\n", <u>totl</u>);' : i>=4 ? '  printf("%lld\\n", s)<u>&nbsp;</u>' : x.C[5]);
+    lastP.innerHTML = '<i>5</i>' + (i>=6 ? 'print(<u>totl</u>)' : i>=4 ? 'print(s<u>&nbsp;</u>' : x.P[4]);
+    [lastC,lastP].forEach(l=>l.classList.toggle('err', i>=4 && i<=6));
+    const run=(t,ms)=>{ t.bar.classList.add('show'); t.fill.style.transition='none'; t.fill.style.width='0'; void t.fill.offsetWidth; t.fill.style.transition=`width ${ms}ms linear`; t.fill.style.width='100%'; };
+    [x.c,x.p].forEach(t=>{ t.bar.classList.remove('show'); t.fill.style.transition='none'; t.fill.style.width='0'; t.out.innerHTML=''; t.cmd.innerHTML=''; t.badge.textContent=''; t.badge.className='lr-badge'; t.p.classList.remove('ok','bad'); });
+    const later=(ms,f)=>{ if(RM) f(); else x.t.push(setTimeout(f, ms)); };
+    const badge=(t,txt,cls)=>{ t.badge.textContent=txt; t.badge.className='lr-badge '+cls; t.p.classList.add(cls); };
+    const cDone='50000005000000<br><span class="muted">real 0.01 s</span>', pDone='summing...<br>50000005000000<br><span class="muted">real 1.3 s</span>';
+    x.sum.classList.toggle('hid', i!==7); x.lr.style.display = i===7 ? 'none' : '';
+    if(i===1){
+      x.c.cmd.innerHTML='$ gcc -O2 sum.c -o sum'; later(500,()=>{ x.c.out.innerHTML='<span class="ok">✓ build OK: executable <b>sum</b> created</span>'; badge(x.c,'compiled','ok'); });
+      x.p.cmd.innerHTML='$ <span class="muted">(no build step)</span>';
+    }
+    if(i===2){
+      x.c.cmd.innerHTML='$ time ./sum'; x.p.cmd.innerHTML='$ time python sum.py'; x.p.out.innerHTML='summing...';
+      run(x.c,150); run(x.p,RM?0:1800);
+      later(250,()=>{ x.c.out.innerHTML=cDone; badge(x.c,'finished','ok'); });
+      later(1900,()=>{ x.p.out.innerHTML=pDone; badge(x.p,'finished','ok'); });
+    }
+    if(i===3){
+      x.c.cmd.innerHTML='$ time ./sum'; x.p.cmd.innerHTML='$ time python sum.py';
+      [x.c,x.p].forEach(t=>{ t.bar.classList.add('show'); t.fill.style.width='100%'; });
+      x.c.out.innerHTML=cDone; x.p.out.innerHTML=pDone;
+      badge(x.c,'⚡ ≈ 0.01 s','ok'); badge(x.p,'🐢 ≈ 1.3 s','bad');
+    }
+    if(i===5){
+      x.c.cmd.innerHTML='$ gcc -O2 sum.c -o sum';
+      later(400,()=>{ x.c.out.innerHTML='<span class="bad">sum.c:6:22: error: expected \';\' before \'return\'</span><br><span class="muted">no executable written</span>'; badge(x.c,'compile-time error','bad'); });
+      x.p.cmd.innerHTML='$ python sum.py';
+      later(400,()=>{ x.p.out.innerHTML='<span class="bad">  File "sum.py", line 5<br>    print(s<br>         ^<br>SyntaxError: \'(\' was never closed</span><br><span class="muted">nothing printed, nothing ran</span>'; badge(x.p,'error before running','bad'); });
+    }
+    if(i===6){
+      x.c.cmd.innerHTML='$ gcc -O2 sum.c -o sum';
+      later(400,()=>{ x.c.out.innerHTML='<span class="bad">sum.c:6:22: error: \'totl\' undeclared</span><br><span class="muted">caught before running</span>'; badge(x.c,'compile-time error','bad'); });
+      x.p.cmd.innerHTML='$ python sum.py'; x.p.out.innerHTML='summing...'; run(x.p,RM?0:1800);
+      later(1900,()=>{ x.p.out.innerHTML='summing...<br><span class="bad">Traceback (most recent call last):<br>  File "sum.py", line 5, in &lt;module&gt;<br>    print(totl)<br>NameError: name \'totl\' is not defined</span><br><span class="muted">failed after the whole loop ran</span>'; badge(x.p,'run-time error','bad'); });
+    }
+  }};
+
 
 /* =====================================================================
    Review demos (Midterm / Final)

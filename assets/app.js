@@ -41,6 +41,7 @@ function deck(s){
   s.slides.forEach(x=>d.push(Object.assign({type:'concept'},x)));
   if(s.mistakes) d.push({type:'mist', k:'Common mistakes', h:'Avoid these mistakes', pts:s.mistakes.map(m=>['⚠️',m]), n:'Ask: has anyone made one of these mistakes?'});
   if(s.lab) d.push({type:'lab', k:'Classroom activity', h:s.lab.t, pts:s.lab.steps.map((x,i)=>[(i+1)+'.',x]), n:'Give 15–20 minutes. Walk around and help. Ask 2–3 students to show their result.'});
+  if(s.lab&&s.lab.demo) d.push({type:'demo', k:'Lab animation', h:s.lab.demoH||'Watch the lab run', demo:s.lab.demo, full:true, n:s.lab.demoN||'Step through before students try it, so they know what to look for.'});
   if(s.disc) d.push({type:'disc', k:'Discussion', h:'Let\'s discuss', pts:s.disc.map(q=>['💬',q]), n:'Use think–pair–share: 1 minute alone, 2 minutes in pairs, then share.'});
   d.push({type:'rev', k:'Session summary', h:'Remember these points', pts:s.rev.map(r=>['✔',r]), n:'Cold-call students to explain each point in their own words.'});
   s.quiz.forEach((q,i)=>d.push({type:'quiz', k:`Knowledge check · Q${i+1} of ${s.quiz.length}`, q, n:'Let students vote before revealing. Answer: '+strip(q.o[q.a])+'. '+strip(q.e)}));
@@ -185,7 +186,7 @@ function study(id){
       <div class="card obj" id="obj"><h2>🎯 Learning objectives</h2><ul>${s.obj.map(o=>`<li>${o}</li>`).join('')}</ul></div><br>
       ${s.bloom?`<div class="card" id="bloom"><h2>🌸 Bloom's Taxonomy outcomes</h2>${bloomHTML(s.bloom)}</div><br>`:''}
       ${s.slides.map((x,i)=>`<section class="slideCard" id="c${i}"><div class="k">${esc(x.k||'Concept')} · ${i+1}/${s.slides.length}</div><h3>${x.ic?x.ic+' ':''}${x.h}</h3>${body(x)}${x.demo?`<div data-demo="${x.demo}"></div>`:''}</section>`).join('')}
-      ${s.lab?`<div class="card lab" id="lab"><h2>🛠 ${esc(s.lab.t)}</h2><ol>${s.lab.steps.map(m=>`<li>${m}</li>`).join('')}</ol>${s.lab.out?`<p class="tiny"><b>Output:</b> ${s.lab.out}</p>`:''}</div><br>`:''}
+      ${s.lab?`<div class="card lab" id="lab"><h2>🛠 ${esc(s.lab.t)}</h2><ol>${s.lab.steps.map(m=>`<li>${m}</li>`).join('')}</ol>${s.lab.out?`<p class="tiny"><b>Output:</b> ${s.lab.out}</p>`:''}${s.lab.demo?`<div data-demo="${s.lab.demo}"></div>`:''}</div><br>`:''}
       ${s.disc?`<div class="card" id="disc"><h2>💬 Discussion questions</h2><ol>${s.disc.map(m=>`<li>${m}</li>`).join('')}</ol></div><br>`:''}
       <div class="card mist" id="mist"><h2>⚠️ Common mistakes</h2><ul>${s.mistakes.map(m=>`<li>${m}</li>`).join('')}</ul></div><br>
       <div class="card" id="rev"><h2>✔ Session summary & revision</h2><ul>${s.rev.map(m=>`<li>${m}</li>`).join('')}</ul></div><br>
@@ -238,7 +239,7 @@ function renderSlide(dir){
   } else {
     const vis = x.demo ? `<div data-demo="${x.demo}"></div>` : (x.ic && !x.pts && !x.cmp ? `<div class="bigicon">${x.ic}</div>` : '');
     const txt = `<div class="k">${esc(x.k||'Concept')}</div><h2>${x.ic&&!vis&&x.type==='concept'?x.ic+' ':''}${x.h}</h2>${body(x)}`;
-    inner = vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code)?'one':x.demo?'wide':''}"><div>${txt}</div>${vis}</div>` : txt;
+    inner = x.full ? `<div class="full">${txt}${vis}</div>` : vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code)?'one':x.demo?'wide':''}"><div>${txt}</div>${vis}</div>` : txt;
   }
   const b=$('#pbody'); b.innerHTML=`<div class="slide ${dir}">${inner}</div>`; b.scrollTop=0;
   mountDemos(b); fitSlide(); setTimeout(fitSlide,80);

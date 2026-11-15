@@ -1,8 +1,8 @@
 /* Offline support for the Compiler Construction portal. Bump VERSION with the ?v= number in index.html. */
-const VERSION = 'cc-v14';
-const CORE = ['./', 'index.html', 'manifest.webmanifest', 'assets/styles.css?v=14', 'assets/portal.css?v=14',
-  'assets/sessions/part1.js?v=14', 'assets/sessions/part2.js?v=14', 'assets/sessions/part3.js?v=14', 'assets/sessions/part4.js?v=14',
-  'assets/demos.js?v=14', 'assets/tools.js?v=14', 'assets/portal-data.js?v=14', 'assets/portal.js?v=14', 'assets/app.js?v=14',
+const VERSION = 'cc-v15';
+const CORE = ['./', 'index.html', 'manifest.webmanifest', 'assets/styles.css?v=15', 'assets/portal.css?v=15',
+  'assets/sessions/part1.js?v=15', 'assets/sessions/part2.js?v=15', 'assets/sessions/part3.js?v=15', 'assets/sessions/part4.js?v=15',
+  'assets/demos.js?v=15', 'assets/tools.js?v=15', 'assets/portal-data.js?v=15', 'assets/portal.js?v=15', 'assets/app.js?v=15',
   'assets/instructor.jpg', 'assets/icons/icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
