@@ -171,7 +171,7 @@ The site is now a student portal with an app feel. New files: `assets/portal.js`
   - `window.print()` opens Android printing (Save as PDF).
   - External links open in the phone's browser.
   - The website's "📱 Android app (APK)" button is hidden inside the app, which checks for `window.AndroidApp`.
-- **Version:** 2.0.1 (versionCode 3) built 2026-11-15; published as GitHub release `app-v2.0.1` (the website button serves it). minSdk 23 (Android 6), targetSdk 36 from 2.1.0 (edge-to-edge insets and the Android 13+ back callback are handled in `MainActivity`), compileSdk 36. AGP 9.1.0, Gradle 9.3.1, `androidx.webkit:webkit:1.12.1`.
+- **Version:** 2.0.1 (versionCode 3) built 2026-11-15; published as GitHub release `app-v2.0.1` (the website button serves it). minSdk 24 (Android 7; Play automatic protection needs 24+), targetSdk 36 from 2.1.0 (edge-to-edge insets and the Android 13+ back callback are handled in `MainActivity`), compileSdk 36. AGP 9.1.0, Gradle 9.3.1, `androidx.webkit:webkit:1.12.1`.
 - **Signing:** PKCS12 key with alias `cc-course`. Certificate SHA-256 `4958be8c…a959` (CN=Muhammad Tahir Mehmood). **Every update must use this same key**, or phones refuse the update.
 - **Icon:** a blue-cyan gradient tile with "CC". The PNGs are in `res/mipmap-*`; the adaptive icon is in `mipmap-anydpi-v26`.
 - **Build on this PC:** it reuses the toolchain from the DEA app: `C:\dev\jdk21`, `C:\dev\android-sdk` (build-tools 36.0.0, platforms 34–36), and Gradle 9.3.1 from `%USERPROFILE%\.gradle\wrapper\dists`.
