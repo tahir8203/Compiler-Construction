@@ -142,7 +142,7 @@ Swiping changes slides on touch screens.
 
 **Rules when editing:**
 1. Edit content in `assets/sessions/*.js`.
-2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=16**. Bump `VERSION` in `sw.js` to the same number.
+2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=17**. Bump `VERSION` in `sw.js` to the same number.
 3. Commit and push to `main`. Vercel deploys within about a minute.
 4. Keep Bloom's Taxonomy Head/Heart/Hand outcomes on every session.
 
@@ -171,7 +171,7 @@ The site is now a student portal with an app feel. New files: `assets/portal.js`
   - `window.print()` opens Android printing (Save as PDF).
   - External links open in the phone's browser.
   - The website's "📱 Android app (APK)" button is hidden inside the app, which checks for `window.AndroidApp`.
-- **Version:** 2.0.1 (versionCode 3) built 2026-11-15; published as GitHub release `app-v2.0.1` (the website button serves it). minSdk 23 (Android 6), targetSdk 34, compileSdk 36. AGP 9.1.0, Gradle 9.3.1, `androidx.webkit:webkit:1.12.1`.
+- **Version:** 2.0.1 (versionCode 3) built 2026-11-15; published as GitHub release `app-v2.0.1` (the website button serves it). minSdk 23 (Android 6), targetSdk 36 from 2.1.0 (edge-to-edge insets and the Android 13+ back callback are handled in `MainActivity`), compileSdk 36. AGP 9.1.0, Gradle 9.3.1, `androidx.webkit:webkit:1.12.1`.
 - **Signing:** PKCS12 key with alias `cc-course`. Certificate SHA-256 `4958be8c…a959` (CN=Muhammad Tahir Mehmood). **Every update must use this same key**, or phones refuse the update.
 - **Icon:** a blue-cyan gradient tile with "CC". The PNGs are in `res/mipmap-*`; the adaptive icon is in `mipmap-anydpi-v26`.
 - **Build on this PC:** it reuses the toolchain from the DEA app: `C:\dev\jdk21`, `C:\dev\android-sdk` (build-tools 36.0.0, platforms 34–36), and Gradle 9.3.1 from `%USERPROFILE%\.gradle\wrapper\dists`.
@@ -195,6 +195,7 @@ The site is now a student portal with an app feel. New files: `assets/portal.js`
   ```
   The website button always points to the latest release.
 - **In-app update notice (from 2.0.1):** the app reads `app-version.json` from the website on start-up and from **Me → App updates**. If its `versionCode` is higher than the installed one, a pop-up offers the download (Later hides it for a day) and the Me tab shows a red dot. `vercel.json` adds the CORS header the app needs to read that file.
+- **Google Play (2.1.0, not yet published):** `bash android/build-local.sh 2.1.0 4 play` builds a signed `.aab` with `STORE=play` into `D:\Fall 2026\Compiler\play-store\` (outside the repo, with the listing text, icon, feature graphic, screenshots and a step-by-step guide in its README). The Play build skips the GitHub update pop-up (Play policy); **Me → App updates** opens the Play page instead. Privacy policy: `privacy.html` on the website. The Play Console account, fee, identity check and the 12-tester/14-day closed test are the instructor's to do.
   **After publishing a release, update `app-version.json`** (versionCode, versionName, date, notes) and push. Only do this once the release APK is uploaded, otherwise phones are sent to the old file.
 - **GitHub Actions:** the cloud build in `.github/workflows/android.yml` is set up. The repo secrets `KEYSTORE_B64` and `KEYSTORE_PASSWORD` are set. It is **blocked because the GitHub account is locked for billing** (as of 2026-11-12), so use the local build.
 

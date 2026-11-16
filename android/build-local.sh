@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Build the signed APK on this PC (same tools as the DEA app: C:\dev\jdk21, C:\dev\android-sdk, cached Gradle 9.3.1).
-# Usage (Git Bash, from the repo root):  bash android/build-local.sh 2.0.1 3
+# Usage (Git Bash, from the repo root):
+#   bash android/build-local.sh 2.0.1 3          -> GitHub APK  (D:\Fall 2026\Compiler\CompilerConstruction.apk)
+#   bash android/build-local.sh 2.1.0 4 play     -> Google Play bundle (D:\Fall 2026\Compiler\play-store\CompilerConstruction-<ver>.aab)
 set -euo pipefail
-VER="${1:-1.0.0}"; CODE="${2:-1}"
+VER="${1:-1.0.0}"; CODE="${2:-1}"; TARGET="${3:-github}"
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 B=/c/dev/cc_build                       # build mirror without spaces in the path
 KEYDIR="/d/Fall 2026/Compiler/android-signing"
@@ -29,9 +31,17 @@ sed -i -e 's#https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min
  -e 's#https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css#vendor/atom-one-dark.min.css#g' \
  -e 's#https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css#vendor/bootstrap-icons.min.css#g' lectures-1-3.html
 export JAVA_HOME=/c/dev/jdk21 ANDROID_HOME='C:\dev\android-sdk' PATH=/c/dev/jdk21/bin:$PATH
-export KEYSTORE_FILE='C:\dev\cc_signing\cc-course-release.p12' KEY_ALIAS=cc-course VERSION_CODE="$CODE" VERSION_NAME="$VER"
+export STORE="$TARGET" KEYSTORE_FILE='C:\dev\cc_signing\cc-course-release.p12' KEY_ALIAS=cc-course VERSION_CODE="$CODE" VERSION_NAME="$VER"
 export KEYSTORE_PASSWORD="$(sed -n 's/^Password (store and key): //p' "$KEYDIR/KEYSTORE-PASSWORD.txt" | tr -d '\r\n')"
 G="$(ls -d ~/.gradle/wrapper/dists/gradle-9.3.1-all/*/gradle-9.3.1)/bin/gradle"
-cd "$B" && "$G" --no-daemon assembleRelease
-cp "$B/app/build/outputs/apk/release/app-release.apk" "/d/Fall 2026/Compiler/CompilerConstruction.apk"
-echo "APK: D:\Fall 2026\Compiler\CompilerConstruction.apk"
+rm -rf "$B/app/build/generated/source/buildConfig"   # STORE changes between builds
+if [ "$TARGET" = play ]; then
+  cd "$B" && "$G" --no-daemon bundleRelease
+  mkdir -p "/d/Fall 2026/Compiler/play-store"
+  cp "$B/app/build/outputs/bundle/release/app-release.aab" "/d/Fall 2026/Compiler/play-store/CompilerConstruction-$VER.aab"
+  echo "AAB: D:\Fall 2026\Compiler\play-store\CompilerConstruction-$VER.aab"
+else
+  cd "$B" && "$G" --no-daemon assembleRelease
+  cp "$B/app/build/outputs/apk/release/app-release.apk" "/d/Fall 2026/Compiler/CompilerConstruction.apk"
+  echo "APK: D:\Fall 2026\Compiler\CompilerConstruction.apk"
+fi

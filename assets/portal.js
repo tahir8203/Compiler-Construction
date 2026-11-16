@@ -9,6 +9,8 @@ const strip=s=>String(s||'').replace(/<[^>]+>/g,'');
 const IN_APP=()=>!!window.AndroidApp;
 const APK='https://github.com/tahir8203/Compiler-Construction/releases/latest/download/CompilerConstruction.apk';
 const SITE='https://compiler-construction-phi.vercel.app/';
+const PLAY_URL='https://play.google.com/store/apps/details?id=com.tahir.compilerconstruction';
+const FROM_PLAY=()=>{ try{ return IN_APP()&&!!AndroidApp.store&&AndroidApp.store()==='play'; }catch(e){ return false; } };
 
 /* ---------- portal storage ---------- */
 const PK='cc-portal-v1';
@@ -59,7 +61,7 @@ function updMem(){ try{ return JSON.parse(localStorage.getItem(UK))||{}; }catch(
 function updSave(o){ try{ localStorage.setItem(UK,JSON.stringify(Object.assign(updMem(),o))); }catch(e){} }
 function ago(t){ if(!t) return ''; const m=Math.round((Date.now()-t)/6e4); return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'; }
 function checkUpdate(manual){
-  const cur=appVer(); if(!cur) return;
+  const cur=appVer(); if(!cur||FROM_PLAY()) return;
   upd={state:'checking',cur}; updUI();
   fetch(VURL+'?t='+Date.now(),{cache:'no-store'}).then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(v=>{
     if(!v||!(+v.versionCode)) throw 0;
@@ -84,6 +86,7 @@ function updUI(){
   const t=$('#tabbar .tab[data-t="me"]'); if(t) t.classList.toggle('updot',upd.state==='new');
   const b=$('#meBtn'); if(b) b.classList.toggle('updot',upd.state==='new');
   const r=$('#sUpd'); if(!r) return; const c=upd.cur||appVer()||{}, nm=c.name?'Version '+esc(c.name):'This app';
+  if(FROM_PLAY()){ $('small',r).innerHTML=`${nm} · updates come from Google Play`; return; }
   const s={checking:`${nm} · checking…`, new:`<b class="upnew">Version ${esc(upd.v&&upd.v.versionName||'')} is available. Tap to update.</b>`, latest:`${nm} · up to date (checked ${ago(updMem().at)})`, offline:`${nm} · could not check (offline)`}[upd.state]||`${nm} · tap to check for updates`;
   $('small',r).innerHTML=s; r.classList.toggle('hasupd',upd.state==='new');
 }
@@ -410,7 +413,7 @@ function me(){
   $('#pedit').onclick=()=>{ const w=sheet(`<div class="ob"><h2>Edit profile</h2><label>Name<input id="obN" type="text" maxlength="40" value="${esc(ps.name)}"></label><label>Roll number<input id="obR" type="text" maxlength="30" value="${esc(ps.roll)}"></label><label>Semester start date<input id="obS" type="date" value="${esc(ps.start)}"></label><div class="toolbar"><button class="btn pri" id="obGo">Save</button><button class="btn" data-close>Cancel</button></div></div>`);
     $('#obGo',w).onclick=()=>{ ps.name=$('#obN',w).value.trim(); ps.roll=$('#obR',w).value.trim(); ps.start=$('#obS',w).value; ps.skip=1; save(); closeSheet(w); me(); afterRoute(['me']); toast('Profile saved'); }; };
   $('#sTheme').onclick=()=>{ a.flipTheme(); haptic(); };
-  const su=$('#sUpd'); if(su){ su.onclick=()=>{ haptic(); if(upd.state==='new') updPopup(); else checkUpdate(true); }; updUI(); }
+  const su=$('#sUpd'); if(su){ su.onclick=()=>{ haptic(); if(FROM_PLAY()){ location.href=PLAY_URL; return; } if(upd.state==='new') updPopup(); else checkUpdate(true); }; updUI(); }
   const si=$('#sInst'); if(si) si.onclick=()=>{ if(installEvt){ installEvt.prompt(); installEvt=null; } else sheet(`<div class="ob"><h2>Install the portal</h2><p><b>Android (Chrome):</b> open the ⋮ menu and choose “Add to Home screen” or “Install app”.</p><p><b>iPhone (Safari):</b> tap the Share button, then “Add to Home Screen”.</p><p><b>Computer (Chrome / Edge):</b> click the install icon at the right of the address bar.</p><div class="toolbar"><button class="btn pri" data-close>OK</button></div></div>`); };
   $('#sShare').onclick=()=>{ const text='Compiler Construction course portal: animated lectures, practice quizzes, lab tools and cheat sheets. '+SITE; try{ if(IN_APP()&&AndroidApp.share){ AndroidApp.share(text); return; } if(navigator.share){ navigator.share({title:'Compiler Construction',text,url:SITE}).catch(()=>{}); return; } }catch(e){} copy(SITE,'Link copied'); };
   $('#sBak').onclick=()=>{ let code=''; try{ code=btoa(unescape(encodeURIComponent(JSON.stringify({c:a.st,p:ps})))); }catch(e){}
@@ -446,6 +449,6 @@ function openSearch(){ if($('.sheetw.srch')) return; sIndex=sIndex||buildIndex()
 }
 
 buildShell();
-if(appVer()) setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); else { upd={state:'offline',cur:appVer()}; updUI(); } },3500);
+if(appVer()&&!FROM_PLAY()) setTimeout(()=>{ if(navigator.onLine!==false) checkUpdate(false); else { upd={state:'offline',cur:appVer()}; updUI(); } },3500);
 window.CCPortal={ routes:{'':home, practice, pipeline, sheets, me}, checkUpdate, afterRoute, onDone, onQuiz, onAssess, onPres, reset, toast, confetti, openSearch };
 })();

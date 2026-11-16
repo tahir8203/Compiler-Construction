@@ -24,6 +24,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.window.OnBackInvokedDispatcher;
 import android.widget.FrameLayout;
 
 import androidx.webkit.WebViewAssetLoader;
@@ -52,6 +53,21 @@ public class MainActivity extends Activity {
         root.addView(web, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setContentView(root);
+        // Android 15+ draws apps edge to edge: keep the page clear of the status bar, navigation bar,
+        // camera cutout and keyboard by padding the root view.
+        if (Build.VERSION.SDK_INT >= 35) {
+            root.setOnApplyWindowInsetsListener((v, in) -> {
+                android.graphics.Insets b = in.getInsets(WindowInsets.Type.systemBars()
+                        | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
+                v.setPadding(b.left, b.top, b.right, b.bottom);
+                return WindowInsets.CONSUMED;
+            });
+        }
+        // Android 13+ back gesture (required for predictive back when targeting Android 16).
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+        }
 
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
                 .setDomain(HOST)
@@ -68,7 +84,7 @@ public class MainActivity extends Activity {
         s.setTextZoom(100);
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
-        s.setUserAgentString(s.getUserAgentString() + " CCCourseApp/2.0");
+        s.setUserAgentString(s.getUserAgentString() + " CCCourseApp/2.1");
 
         web.addJavascriptInterface(new Bridge(), "AndroidApp");
 
@@ -149,8 +165,19 @@ public class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
     private void applyBars(boolean light) {
         int c = Color.parseColor(light ? "#f4f7fd" : "#070b16");
-        getWindow().setStatusBarColor(c);
-        getWindow().setNavigationBarColor(c);
+        root.setBackgroundColor(c); // shows behind the transparent bars on Android 15+
+        if (Build.VERSION.SDK_INT < 35) {
+            getWindow().setStatusBarColor(c);
+            getWindow().setNavigationBarColor(c);
+        }
+        if (Build.VERSION.SDK_INT >= 30) {
+            WindowInsetsController wc = getWindow().getInsetsController();
+            if (wc != null) {
+                int m = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+                wc.setSystemBarsAppearance(light ? m : 0, m);
+            }
+            return;
+        }
         View d = getWindow().getDecorView();
         int f = d.getSystemUiVisibility();
         int lightFlags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | (Build.VERSION.SDK_INT >= 26 ? View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0);
@@ -160,6 +187,10 @@ public class MainActivity extends Activity {
     @Override
     @SuppressWarnings("deprecation")
     public void onBackPressed() {
+        handleBack();
+    }
+
+    private void handleBack() {
         if (customView != null) {
             web.evaluateJavascript("document.exitFullscreen&&document.exitFullscreen().catch(function(){})", null);
             return;
@@ -210,6 +241,12 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isApp() {
             return true;
+        }
+
+        /** Where this copy came from: "play" (Google Play) or "github" (APK download). */
+        @JavascriptInterface
+        public String store() {
+            return BuildConfig.STORE;
         }
 
         /** Installed versionCode, used by the portal to check for updates. */
