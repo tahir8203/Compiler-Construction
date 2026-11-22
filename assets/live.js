@@ -27,7 +27,7 @@ function compile(src){
   if(target){ const lt=(r.sym.find(s=>s.id===target)||{}).type, rt=tyOf(rhs);
     r.checks.push(lt===rt ? `Assignment ${lt} = ${rt} is allowed ✓` : lt==='float' ? `int value is widened to float (type conversion) ✓` : `⚠ float value is narrowed to int (some compilers warn here)`); }
   // 4. intermediate code (three-address code)
-  r.tac = T.translate(r.ast).code;
+  r.tac = tac(r.ast, tyOf, target ? (r.sym.find(s=>s.id===target)||{}).type : null);
   // 5. optimiser: constant folding + removing a useless copy
   r.opt = optimise(r.tac);
   // 6. code generator: a simple register machine
@@ -39,6 +39,21 @@ function compile(src){
             : `When the program runs, the CPU executes ${r.asm.length} machine instructions to compute <b>${esc(target||'the value')}</b> from the current values of ${ids.filter(i=>i!==target).map(esc).join(', ')||'its operands'}.`;
   return r;
 }
+/* three-address code with explicit int -> float conversions, e.g. t1 = (float) k */
+function tac(ast, tyOf, targetType){
+  const code=[]; let n=0; const nt=()=>'t'+(++n);
+  const conv=(x,to)=>{ const t=nt(); code.push(`${t} = (${to}) ${x.a}`); return {a:t, ty:to}; };
+  function g(nd){
+    if(nd.leaf) return {a:nd.leaf, ty:tyOf(nd)};
+    if(nd.op==='='){ let r=g(nd.r); if(targetType && r.ty!==targetType) r=conv(r,targetType); code.push(`${nd.l.leaf} = ${r.a}`); return {a:nd.l.leaf, ty:r.ty}; }
+    if(nd.op==='minus'){ const a=g(nd.l), t=nt(); code.push(`${t} = minus ${a.a}`); return {a:t, ty:a.ty}; }
+    let a=g(nd.l), b=g(nd.r);
+    if(a.ty!==b.ty){ if(a.ty==='int') a=conv(a,'float'); else b=conv(b,'float'); }
+    const t=nt(); code.push(`${t} = ${a.a} ${nd.op} ${b.a}`); return {a:t, ty:a.ty};
+  }
+  g(ast); return code;
+}
+const fmt=(r,fl)=> fl ? (Number.isInteger(r)? r.toFixed(1) : String(+r.toFixed(6))) : String(Math.trunc(r));
 const OPS = {'+':(a,b)=>a+b,'-':(a,b)=>a-b,'*':(a,b)=>a*b,'/':(a,b)=>b===0?NaN:a/b};
 function optimise(code){
   const val = {}, out = [];
@@ -46,10 +61,11 @@ function optimise(code){
   for(const ln of code){
     let m;
     if((m=/^(\w+) = (\S+) ([+\-*/]) (\S+)$/.exec(ln))){ const a=v(m[2]), b=v(m[4]);
-      if(num(a)&&num(b)&&!isNaN(OPS[m[3]](+a,+b))){ let r=OPS[m[3]](+a,+b); if(!String(a).includes('.')&&!String(b).includes('.')) r=Math.trunc(r); val[m[1]]=+r.toFixed(6); if(!/^t\d+$/.test(m[1])) out.push(`${m[1]} = ${val[m[1]]}`); }
+      if(num(a)&&num(b)&&!isNaN(OPS[m[3]](+a,+b))){ const fl=a.includes('.')||b.includes('.'); val[m[1]]=fmt(OPS[m[3]](+a,+b),fl); if(!/^t\d+$/.test(m[1])) out.push(`${m[1]} = ${val[m[1]]}`); }
       else out.push(`${m[1]} = ${a} ${m[3]} ${b}`); }
-    else if((m=/^(\w+) = minus (\S+)$/.exec(ln))){ const a=v(m[2]); if(num(a)){ val[m[1]]=-a; if(!/^t\d+$/.test(m[1])) out.push(`${m[1]} = ${-a}`); } else out.push(`${m[1]} = minus ${a}`); }
-    else if((m=/^(\w+) = (\S+)$/.exec(ln))){ const a=v(m[2]); if(num(a)){ val[m[1]]=+a; out.push(`${m[1]} = ${a}`); }
+    else if((m=/^(\w+) = \((float|int)\) (\S+)$/.exec(ln))){ const a=v(m[3]); if(num(a)) val[m[1]]=fmt(+a,m[2]==='float'); else out.push(`${m[1]} = (${m[2]}) ${a}`); }
+    else if((m=/^(\w+) = minus (\S+)$/.exec(ln))){ const a=v(m[2]); if(num(a)){ val[m[1]]=fmt(-a,a.includes('.')); if(!/^t\d+$/.test(m[1])) out.push(`${m[1]} = ${val[m[1]]}`); } else out.push(`${m[1]} = minus ${a}`); }
+    else if((m=/^(\w+) = (\S+)$/.exec(ln))){ const a=v(m[2]); if(num(a)){ val[m[1]]=a; out.push(`${m[1]} = ${a}`); }
       else { const prev=out[out.length-1], p=prev&&new RegExp('^'+a+' = (.*)$').exec(prev);
         if(p && /^t\d+$/.test(a)) out[out.length-1]=`${m[1]} = ${p[1]}`; else out.push(`${m[1]} = ${a}`); } }
     else out.push(ln);
@@ -61,6 +77,7 @@ function codegen(code){
   const ld = x => /^-?[\d.]+$/.test(x) ? `#${x}` : x;
   for(const ln of code){ let m;
     if((m=/^(\w+) = (\S+) ([+\-*/]) (\S+)$/.exec(ln))) asm.push(`LOAD  R1, ${ld(m[2])}`, `${OP[m[3]].padEnd(5)} R1, ${ld(m[4])}`, `STORE ${m[1]}, R1`);
+    else if((m=/^(\w+) = \((float|int)\) (\S+)$/.exec(ln))) asm.push(`LOAD  R1, ${ld(m[3])}`, m[2]==='float'?'ITOF  R1':'FTOI  R1', `STORE ${m[1]}, R1`);
     else if((m=/^(\w+) = minus (\S+)$/.exec(ln))) asm.push(`LOAD  R1, ${ld(m[2])}`, `NEG   R1`, `STORE ${m[1]}, R1`);
     else if((m=/^(\w+) = (\S+)$/.exec(ln))) asm.push(`LOAD  R1, ${ld(m[2])}`, `STORE ${m[1]}, R1`);
   }

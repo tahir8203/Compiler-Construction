@@ -256,7 +256,7 @@ function renderSlide(dir){
   } else if(x.type==='quiz'){
     const q=x.q; inner=`<div class="k">${x.k}</div><h2 style="font-size:clamp(24px,3.2vw,48px)">${q.q}</h2><div class="quiz qs"><div class="qq">${q.o.map((o,j)=>`<button class="op" data-j="${j}">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}<div class="why">💡 ${q.e}</div></div></div>`;
   } else {
-    const vis = x.demo ? demoDiv(x) : (x.ic && !x.pts && !x.cmp ? `<div class="bigicon">${x.ic}</div>` : '');
+    const vis = x.demo ? demoDiv(x) : (x.ic && !x.pts && !x.cmp && !x.code && !x.img && strip(x.p||'').length<200 ? `<div class="bigicon">${x.ic}</div>` : '');
     const txt = `<div class="k">${esc(x.k||'Concept')}</div><h2>${x.ic&&!vis&&x.type==='concept'?x.ic+' ':''}${x.h}</h2>${body(x)}`;
     inner = x.full ? `<div class="full">${txt}${vis}</div>` : vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code)?'one':x.demo?(x.p||x.an?'wide bal':'wide'):''}"><div>${txt}</div>${vis}</div>` : txt;
   }
