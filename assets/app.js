@@ -31,31 +31,44 @@ const kindChip = s => s.assess ? s.assess.split(' + ').map(a=>`<span class="chip
 const teach = S.filter(s=>!s.exam);
 const pct = () => Math.round(S.filter(s=>st.done[s.id]).length / S.length * 100);
 
-/* Full presentation deck of a session. */
+/* Full presentation deck of a session: at most 25 slides.
+   Order: title · (why this matters) · objectives · content · try it yourself · (lab animation) · recap · check your understanding · glossary · (assessment) · end. */
+const MAXD=25;
 function deck(s){
-  const d=[];
-  d.push({type:'title', k:`Week ${s.week} · ${label(s)}`, h:s.title, p:s.sub, ic:s.ic, n:`Welcome. Today: ${s.title}. Connect to the previous session and say why it matters for a compiler writer.`});
-  if(s.intro) d.push({type:'concept', k:'Introduction', h:'Why this matters', p:s.intro, ic:s.ic, n:'Start with the question or story. Let 2–3 students respond before moving on.'});
-  d.push({type:'obj', k:'Learning objectives', h:'By the end of this session you will be able to…', pts:s.obj.map(o=>['🎯',o]), n:'Read the objectives aloud. Ask which one students already know something about.'});
-  if(s.bloom) d.push({type:'bloom', k:"Bloom's Taxonomy outcomes", h:'Head · Heart · Hand', bloom:s.bloom, n:'Head = what you will know (cognitive). Heart = what you will value (affective). Hand = what you will be able to do (psychomotor).'});
+  const d=[], opt=[];
+  d.push({type:'title', k:`Week ${s.week} · ${label(s)}`, h:s.title, p:s.sub, ic:s.ic, n:s.titleN||{say:`Welcome. Today: ${s.title}. Connect it to the last lecture and say why a compiler needs it.`, ask:'What do you already know about this topic?', ans:'Accept any answer; use it to link today’s lesson to what students know.'}});
+  if(s.intro){ const x={type:'concept', k:'Why this matters', h:s.introH||'Why this matters', p:s.intro, an:s.introAn, ic:s.ic, n:s.introN||{say:'Start with the story or question. Let 2–3 students answer before you move on.'}}; d.push(x); opt.push(x); }
+  d.push({type:'obj', k:'Learning objectives', h:'By the end of this lecture you will be able to…', pts:s.obj.map(o=>['🎯',o]), n:{say:'Read the objectives aloud in simple words. They are what students should be able to do, not just know.', ask:'Which of these do you already know something about?', ans:'Use the answers to decide where to go slower.'}});
   s.slides.forEach(x=>d.push(Object.assign({type:'concept'},x)));
-  if(s.mistakes) d.push({type:'mist', k:'Common mistakes', h:'Avoid these mistakes', pts:s.mistakes.map(m=>['⚠️',m]), n:'Ask: has anyone made one of these mistakes?'});
-  if(s.lab) d.push({type:'lab', k:'Classroom activity', h:s.lab.t, pts:s.lab.steps.map((x,i)=>[(i+1)+'.',x]), n:'Give 15–20 minutes. Walk around and help. Ask 2–3 students to show their result.'});
-  if(s.lab&&s.lab.demo) d.push({type:'demo', k:'Lab animation', h:s.lab.demoH||'Watch the lab run', demo:s.lab.demo, full:true, n:s.lab.demoN||'Step through before students try it, so they know what to look for.'});
-  if(s.disc) d.push({type:'disc', k:'Discussion', h:'Let\'s discuss', pts:s.disc.map(q=>['💬',q]), n:'Use think–pair–share: 1 minute alone, 2 minutes in pairs, then share.'});
-  d.push({type:'rev', k:'Session summary', h:'Remember these points', pts:s.rev.map(r=>['✔',r]), n:'Cold-call students to explain each point in their own words.'});
-  s.quiz.forEach((q,i)=>d.push({type:'quiz', k:`Knowledge check · Q${i+1} of ${s.quiz.length}`, q, n:'Let students vote before revealing. Answer: '+strip(q.o[q.a])+'. '+strip(q.e)}));
+  if(s.lab) d.push({type:'lab', k:'Try it yourself', h:s.lab.t.replace(/^Lab:\s*/,''), pts:s.lab.steps.map((x,i)=>[(i+1)+'.',x]), p:s.lab.out?`<b>You should end with:</b> ${s.lab.out}`:'', n:s.lab.n||{say:'Give 15–20 minutes. Walk around and help. Ask 2–3 students to show their result.', watch:'Students who finish early can help a neighbour.'}});
+  if(s.lab&&s.lab.demo){ const x={type:'demo', k:'Lab animation', h:s.lab.demoH||'Watch the lab run', demo:s.lab.demo, full:true, n:s.lab.demoN||'Step through before students try it, so they know what to look for.'}; d.push(x); opt.push(x); }
+  d.push({type:'rev', k:'Recap', h:'Remember these points', cmp:[['✔ Remember',s.rev],['⚠️ Watch out',s.mistakes||[]]].filter(c=>c[1].length), n:{say:'Ask students to explain each point in their own words before you read it.', ask:(s.disc&&s.disc[0])||'Which point was the hardest today?', ans:(s.disc&&s.disc.length>1)?'Other discussion questions: '+s.disc.slice(1).join(' · '):'Revisit that point with a new example.'}});
+  const cq=(s.check||s.quiz.slice(0,3));
+  if(cq.length) d.push({type:'check', k:'Check your understanding', h:`${cq.length} quick questions`, qs:cq, n:{say:'Students answer on their own first (or show fingers 1–4 for A–D), then reveal.', watch:'Answers: '+cq.map((q,i)=>`Q${i+1} ${String.fromCharCode(65+q.a)}`).join(', ')+'. More questions are in the study view and the Practice centre.'}});
+  const g=lectureTerms(s);
+  if(g.length) d.push({type:'gloss', k:'Glossary', h:'New words in this lecture', terms:g, n:{say:'Point to each word and ask a student for the meaning before you tap it.', watch:'Tap any word to see why it exists and a real-life analogy.'}});
   const a=s.assessment;
-  if(a){
-    d.push({type:'concept', k:a.kind==='assignment'?'Assignment':a.kind==='quiz'?'Quiz':'Assessment', h:a.title, p:a.covers?`Covers: ${a.covers}`:'', pts:(a.instructions||[]).slice(0,5).map(x=>['📌',x]), ic:'📌', n:'Full details, questions and model answers are in the study view (Assessment section).'});
-    (a.mcq||[]).forEach((q,i)=>d.push({type:'quiz', k:`${a.title} · MCQ ${i+1}`, q, n:'Answer: '+strip(q.o[q.a])+'. '+strip(q.e)}));
-    (a.tf||[]).forEach((q,i)=>d.push({type:'quiz', k:`${a.title} · True or False ${i+1}`, q:{q:q.q,o:['True','False'],a:q.a?0:1,e:q.e}, n:'Answer: '+(q.a?'True':'False')+'. '+strip(q.e)}));
-    if(a.tasks) d.push({type:'lab', k:a.title, h:'What you need to do', pts:a.tasks.map((x,i)=>[(i+1)+'.',x]), n:'Clarify the tasks and the submission format. Answer questions.'});
-  }
-  if(s.hw) d.push({type:'concept', k:'Homework / preparation', h:'Before next class', p:s.hw, ic:'🏠', n:'Write the homework on the board as well.'});
+  if(a){ const x={type:'concept', k:a.kind==='assignment'?'Assignment':a.kind==='quiz'?'Quiz':'Assessment', h:a.title, p:a.covers?`Covers: ${a.covers}`:'', pts:(a.instructions||[]).slice(0,5).map(x=>['📌',x]).concat(a.tasks?[['📝',`${a.tasks.length} tasks: see the study view for the full questions and model answers.`]]:[]), ic:'📌', n:'Full details, questions and model answers are in the study view (Assessment section).'}; d.push(x); }
   const nx = nextOf(s);
-  d.push({type:'end', k:'Session complete', h:'Thank you!', p: nx?`Next: <b>${esc(label(nx))} — ${esc(nx.title)}</b>`:'Best of luck in your final examination!', ic:'🎓', n:'Announce deadlines. Preview the next session.'});
+  d.push({type:'end', k:'Lecture complete', h:'Thank you!', p:(nx?`Next: <b>${esc(label(nx))}: ${esc(nx.title)}</b>`:'Best of luck in your final examination!')+(s.hw?`<br><br><span class="tiny"><b>Before next class:</b> ${s.hw}</span>`:''), ic:'🎓', n:{say:'Announce deadlines and preview the next lecture.', ask:'What is one thing you learned today?', ans:'Ask 2–3 students; this is a quick exit ticket.'}});
+  for(const x of opt){ if(d.length<=MAXD) break; d.splice(d.indexOf(x),1); }
+  if(d.length>MAXD) console.warn(`${label(s)}: ${d.length} slides (max ${MAXD})`);
   return d;
+}
+/* Terms whose first appearance in the course (in teaching order) is this lecture, plus the lecture's own key terms. */
+let _firstSeen=null;
+function lectureTerms(s){
+  if(!window.CCTerms) return [];
+  if(!_firstSeen){ _firstSeen={}; S.forEach(z=>{ const txt=[z.title,z.sub,z.intro||''].concat(z.slides.map(x=>[x.h,x.p,x.ex,x.tk,x.an,x.psy,(x.pts||[]).map(p=>p[1]).join(' '),(x.cmp||[]).map(c=>c[1].join(' ')).join(' ')].join(' '))).join(' ');
+    CCTerms.find(strip(txt)).forEach(i=>{ if(!(i in _firstSeen)) _firstSeen[i]=z.id; }); }); }
+  const out=[], seen=new Set();
+  (s.terms||[]).forEach(t=>{ const i=CCTerms.idx(t[0]); if(i>=0){ if(!seen.has(i)){ seen.add(i); out.push(CCTerms.row(i)); } } else out.push([t[0],'',t[1],'','']); });
+  Object.keys(_firstSeen).filter(i=>_firstSeen[i]===s.id&&!seen.has(+i)).forEach(i=>{ seen.add(+i); out.push(CCTerms.row(+i)); });
+  return out.slice(0,24);
+}
+function notesHTML(n){
+  if(!n) return '—'; if(typeof n==='string') return `<p>${n}</p>`;
+  return [n.say&&`<p><b>🗣 Say:</b> ${n.say}</p>`, n.ask&&`<p><b>❓ Likely question:</b> ${n.ask}${n.ans?` <b>Answer:</b> ${n.ans}`:''}</p>`, n.watch&&`<p><b>⚠️ Watch out:</b> ${n.watch}</p>`].filter(Boolean).join('');
 }
 
 /* ---------- slide body (both modes) ---------- */
@@ -67,6 +80,7 @@ function body(x){
   if(x.img) html+=`<figure class="fig"><img src="${x.img.src}" alt="${esc(x.img.alt||'')}" loading="lazy" decoding="async">${x.img.cap?`<figcaption>${x.img.cap}</figcaption>`:''}</figure>`;
   if(x.ex) html+=`<div class="ex"><b>Example:</b> ${x.ex}</div>`;
   if(x.code) html+=`<pre class="code">${x.code}</pre>`;
+  if(x.an) html+=`<div class="an"><b>🔁 Real-life analogy:</b> ${x.an}</div>`;
   if(x.psy) html+=`<div class="ex psy"><b>⚙️ In real compilers:</b> ${x.psy}</div>`;
   if(x.tk) html+=`<div class="tk">${x.tk}</div>`;
   return html;
@@ -78,6 +92,7 @@ function revealOnScroll(){
   const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }),{rootMargin:'0px 0px -40px 0px'});
   els.forEach(el=>{ el.classList.add('rv'); io.observe(el); });
 }
+const demoDiv = x => `<div data-demo="${x.demo}"${x.input?` data-input="${esc(x.input)}"`:''}></div>`;
 function mountDemos(root){ $$('[data-demo]',root).forEach(el=>{ if(!el._demo) window.ICTDemos.mount(el, el.dataset.demo); }); }
 
 /* ---------- instructor card (same design family as the instructor's other course sites) ---------- */
@@ -185,18 +200,18 @@ function study(id){
       ${s.intro?`<div class="card" id="intro"><h2>👋 Introduction</h2><p class="muted" style="font-size:17px">${s.intro}</p></div><br>`:''}
       <div class="card obj" id="obj"><h2>🎯 Learning objectives</h2><ul>${s.obj.map(o=>`<li>${o}</li>`).join('')}</ul></div><br>
       ${s.bloom?`<div class="card" id="bloom"><h2>🌸 Bloom's Taxonomy outcomes</h2>${bloomHTML(s.bloom)}</div><br>`:''}
-      ${s.slides.map((x,i)=>`<section class="slideCard" id="c${i}"><div class="k">${esc(x.k||'Concept')} · ${i+1}/${s.slides.length}</div><h3>${x.ic?x.ic+' ':''}${x.h}</h3>${body(x)}${x.demo?`<div data-demo="${x.demo}"></div>`:''}</section>`).join('')}
+      ${s.slides.map((x,i)=>`<section class="slideCard" id="c${i}"><div class="k">${esc(x.k||'Concept')} · ${i+1}/${s.slides.length}</div><h3>${x.ic?x.ic+' ':''}${x.h}</h3>${body(x)}${x.demo?demoDiv(x):''}${x.n?`<details class="tnotes noprint"><summary>🧑‍🏫 Teacher notes</summary>${notesHTML(x.n)}</details>`:''}</section>`).join('')}
       ${s.lab?`<div class="card lab" id="lab"><h2>🛠 ${esc(s.lab.t)}</h2><ol>${s.lab.steps.map(m=>`<li>${m}</li>`).join('')}</ol>${s.lab.out?`<p class="tiny"><b>Output:</b> ${s.lab.out}</p>`:''}${s.lab.demo?`<div data-demo="${s.lab.demo}"></div>`:''}</div><br>`:''}
       ${s.disc?`<div class="card" id="disc"><h2>💬 Discussion questions</h2><ol>${s.disc.map(m=>`<li>${m}</li>`).join('')}</ol></div><br>`:''}
-      <div class="card mist" id="mist"><h2>⚠️ Common mistakes</h2><ul>${s.mistakes.map(m=>`<li>${m}</li>`).join('')}</ul></div><br>
+      ${s.mistakes&&s.mistakes.length?`<div class="card mist" id="mist"><h2>⚠️ Common mistakes</h2><ul>${s.mistakes.map(m=>`<li>${m}</li>`).join('')}</ul></div><br>`:''}
       <div class="card" id="rev"><h2>✔ Session summary & revision</h2><ul>${s.rev.map(m=>`<li>${m}</li>`).join('')}</ul></div><br>
       <div class="card quiz" id="quiz"><h2>📝 Knowledge check</h2><p class="tiny">Choose an answer to see the explanation.</p>${mcqBlock(s.quiz)}<div class="score" id="score"></div></div><br>
       ${s.assessment?assessHTML(s.assessment)+'<br>':''}
       ${s.hw?`<div class="card" id="hw"><h2>🏠 Homework / preparation</h2><p>${s.hw}</p></div><br>`:''}
-      <div class="card gl" id="terms"><h2>📘 Key terms</h2><dl>${s.terms.map(t=>`<dt>${esc(t[0])}</dt><dd>${esc(t[1])}</dd>`).join('')}</dl></div>
+      <div class="card gl" id="terms"><h2>📘 Glossary: new words in this lecture</h2><dl>${lectureTerms(s).map(t=>`<dt>${esc(t[0])}</dt><dd>${t[2]}${t[3]?`<br><span class="tiny"><b>Why:</b> ${t[3]}</span>`:''}${t[4]?`<br><span class="tiny"><b>🔁 Like:</b> ${t[4]}</span>`:''}</dd>`).join('')}</dl></div>
       <div class="toolbar noprint" style="justify-content:space-between;margin-top:20px">${prev?`<a class="btn" href="#/s/${prev.id}">← ${esc(short(prev))}: ${esc(prev.title)}</a>`:'<span></span>'}${next?`<a class="btn pri" href="#/s/${next.id}">${esc(short(next))}: ${esc(next.title)} →</a>`:''}</div>
     </div></div></div>`;
-  mountDemos(app);
+  mountDemos(app); CCTerms.annotate(app);
   wireChoices($('#quiz',app), {mcq:s.quiz}, (r,n)=>{ $('#score',app).textContent=`Score: ${r} / ${n} ${r===n?'🌟':''}`; st.quiz[s.id]=r+'/'+n; save(); hook('onQuiz',s,r,n); });
   const a=s.assessment; if(a && (a.mcq||a.tf)) wireChoices($('#assess',app), {mcq:a.mcq||[], tf:a.tf||[]}, (r,n)=>{ $('#ascore',app).textContent=`${a.title}: ${r} / ${n}`; st.quiz['a'+s.id]=r+'/'+n; save(); hook('onAssess',s,r,n); });
   $$('[data-jump]',app).forEach(x=>x.onclick=e=>{ e.preventDefault(); const t=$(x.getAttribute('href'),app); t&&t.scrollIntoView({behavior:'smooth'}); });
@@ -223,7 +238,7 @@ function buildPres(){
   $('#pPrev').onclick=()=>{ stopWatch(); go(-1); }; $('#pNext').onclick=()=>{ stopWatch(); go(1); }; $('#pW').onclick=toggleWatch;
   $('#pX').onclick=exitPres; $('#pFull').onclick=full; $('#pN').onclick=toggleNotes; $('#pOv').onclick=overview; $('#pTheme').onclick=flipTheme;
   let x0=null; el.addEventListener('touchstart',e=>{x0=e.touches[0].clientX},{passive:true});
-  el.addEventListener('touchend',e=>{ if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>60 && !e.target.closest('.demo')) go(dx<0?1:-1); x0=null; });
+  el.addEventListener('touchend',e=>{ if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>60 && !e.target.closest('.demo,input,textarea,.gchips')) go(dx<0?1:-1); x0=null; });
 }
 function renderSlide(dir){
   const x=P.d[P.i], n=P.d.length;
@@ -234,34 +249,43 @@ function renderSlide(dir){
     inner=`<div class="two title"><div><div class="k">${x.k}</div><h2>${x.h}</h2><div class="p">${x.p}</div>${x.type==='title'?`<div style="margin-top:22px">${insBadge}</div>`:''}</div><div class="bigicon">${x.ic||'💡'}</div></div>`;
   } else if(x.type==='bloom'){
     inner=`<div class="k">${x.k}</div><h2>${x.h}</h2>${bloomHTML(x.bloom)}`;
+  } else if(x.type==='check'){
+    inner=`<div class="k">${x.k}</div><h2>${x.h}</h2><div class="checks">${x.qs.map((q,qi)=>`<div class="chk qq" data-qi="${qi}"><p class="cq"><b>Q${qi+1}.</b> ${q.q}</p><div class="cops">${q.o.map((o,j)=>`<button class="op" data-j="${j}">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}</div><div class="why">💡 ${q.e}</div></div>`).join('')}</div>`;
+  } else if(x.type==='gloss'){
+    inner=`<div class="k">${x.k}</div><h2>${x.h}</h2><p class="tiny">Tap or hover a word for its meaning, why it exists and a real-life analogy.</p><div class="gchips">${x.terms.map(t=>`<button type="button" class="gchip" data-gt="${esc(t[0])}"><b>${esc(t[0])}</b><span>${t[2]}</span></button>`).join('')}</div>`;
   } else if(x.type==='quiz'){
     const q=x.q; inner=`<div class="k">${x.k}</div><h2 style="font-size:clamp(24px,3.2vw,48px)">${q.q}</h2><div class="quiz qs"><div class="qq">${q.o.map((o,j)=>`<button class="op" data-j="${j}">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}<div class="why">💡 ${q.e}</div></div></div>`;
   } else {
-    const vis = x.demo ? `<div data-demo="${x.demo}"></div>` : (x.ic && !x.pts && !x.cmp ? `<div class="bigicon">${x.ic}</div>` : '');
+    const vis = x.demo ? demoDiv(x) : (x.ic && !x.pts && !x.cmp ? `<div class="bigicon">${x.ic}</div>` : '');
     const txt = `<div class="k">${esc(x.k||'Concept')}</div><h2>${x.ic&&!vis&&x.type==='concept'?x.ic+' ':''}${x.h}</h2>${body(x)}`;
-    inner = x.full ? `<div class="full">${txt}${vis}</div>` : vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code)?'one':x.demo?'wide':''}"><div>${txt}</div>${vis}</div>` : txt;
+    inner = x.full ? `<div class="full">${txt}${vis}</div>` : vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code)?'one':x.demo?(x.p||x.an?'wide bal':'wide'):''}"><div>${txt}</div>${vis}</div>` : txt;
   }
   const b=$('#pbody'); b.innerHTML=`<div class="slide ${dir}">${inner}</div>`; b.scrollTop=0;
   mountDemos(b); fitSlide(); setTimeout(fitSlide,80);
-  const qq=$('.qq',b); if(qq) qq.onclick=e=>{ const o=e.target.closest('.op'); if(!o||qq.classList.contains('done')) return; qq.classList.add('done'); $$('.op',qq)[x.q.a].classList.add('right'); if(+o.dataset.j!==x.q.a) o.classList.add('wrong'); };
-  $('#pnotes').innerHTML=`<b>Presenter notes:</b> ${x.n||'—'}`; $('#pnotes').classList.toggle('show',P.notes);
+  $$('.qq',b).forEach(qq=>{ const q=x.q||x.qs[+qq.dataset.qi]; qq.onclick=e=>{ const o=e.target.closest('.op'); if(!o||qq.classList.contains('done')) return; qq.classList.add('done'); $$('.op',qq)[q.a].classList.add('right'); if(+o.dataset.j!==q.a) o.classList.add('wrong'); fitSlide(); }; });
+  $$('.gchip',b).forEach(c=>c.onclick=e=>{ e.stopPropagation(); CCTerms.open(c, c.dataset.gt); });
+  CCTerms.annotate($('.slide',b));
+  $('#pnotes').innerHTML=`<b>Presenter notes</b>${notesHTML(x.n)}`; $('#pnotes').classList.toggle('show',P.notes);
   if(!$('#pov').classList.contains('show')) $('#pNext').focus({preventScroll:true});
   if(P.watch) scheduleWatch();
 }
 /* Fit-to-screen: shrink a slide that is taller than the stage so nothing is cut off (never below 60%; beyond that the stage scrolls). */
 function fitSlide(){
   const b=$('#pbody'), sl=b&&$('.slide',b); if(!sl) return;
-  sl.style.zoom=''; const cs=getComputedStyle(b);
+  sl.style.zoom=''; if(innerWidth<700) return;   // phones: keep text large and let the slide scroll
+  const cs=getComputedStyle(b);
   const avail=b.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom), need=sl.scrollHeight;
   if(need>avail+2) sl.style.zoom=Math.max(0.6, (avail-4)/need).toFixed(3);
 }
 addEventListener('resize',()=>{ if(P) fitSlide(); });
 /* Watch mode: plays the deck like an animated video — animations auto-play, quizzes reveal, slides auto-advance. */
 function scheduleWatch(){
-  clearTimeout(P.wt); clearTimeout(P.wt2);
+  clearTimeout(P.wt); clearTimeout(P.wt2); [0,1,2,3].forEach(k=>clearTimeout(P['wq'+k]));
   const x=P.d[P.i], b=$('#pbody'), demo=$('[data-demo]',b);
   let ms;
-  if(x.type==='quiz'){ ms=11000; P.wt2=setTimeout(()=>{ const qq=$('.qq',b); if(qq&&!qq.classList.contains('done')) $$('.op',qq)[x.q.a].click(); },6500); }
+  if(x.type==='check'){ ms=6000+x.qs.length*5000; x.qs.forEach((q,qi)=>{ P['wq'+qi]=setTimeout(()=>{ const qq=$$('.qq',b)[qi]; if(qq&&!qq.classList.contains('done')) $$('.op',qq)[q.a].click(); },4500+qi*5000); }); }
+  else if(x.type==='gloss'){ ms=Math.min(16000,5000+x.terms.length*700); }
+  else if(x.type==='quiz'){ ms=11000; P.wt2=setTimeout(()=>{ const qq=$('.qq',b); if(qq&&!qq.classList.contains('done')) $$('.op',qq)[x.q.a].click(); },6500); }
   else if(demo&&demo._demo){ setTimeout(()=>demo._demo.play(),900); ms=900+demo._demo.n*2100+2600; }
   else { const words=strip([x.h,x.p,x.code||'',x.bloom?Object.values(x.bloom).flat().join(' '):'',(x.pts||[]).map(p=>p[1]).join(' '),(x.cmp||[]).map(c=>c[1].join(' ')).join(' '),x.ex,x.tk].join(' ')).split(/\s+/).length; ms=Math.min(16000,Math.max(5000,words*230)); }
   P.wt=setTimeout(()=>{ if(!P||!P.watch) return; if(P.i>=P.d.length-1){ stopWatch(); return; } go(1); }, ms);
@@ -269,7 +293,7 @@ function scheduleWatch(){
 }
 function toggleWatch(){ P.watch ? stopWatch() : startWatch(); }
 function startWatch(){ if(!P) return; P.watch=true; $('#pW').textContent='⏸ Pause (W)'; $('#pW').classList.add('on'); if(!$('#wbar')){ const w=document.createElement('div'); w.className='wbar'; w.innerHTML='<i id="wbar"></i>'; $('#pres').insertBefore(w,$('#pbody')); } scheduleWatch(); }
-function stopWatch(){ if(!P||!P.watch) return; P.watch=false; clearTimeout(P.wt); clearTimeout(P.wt2); $('#pW').textContent='▶ Watch (W)'; $('#pW').classList.remove('on'); const w=$('.wbar'); if(w) w.remove(); }
+function stopWatch(){ if(!P||!P.watch) return; P.watch=false; clearTimeout(P.wt); clearTimeout(P.wt2); [0,1,2,3].forEach(k=>clearTimeout(P['wq'+k])); $('#pW').textContent='▶ Watch (W)'; $('#pW').classList.remove('on'); const w=$('.wbar'); if(w) w.remove(); }
 function go(dlt){ const j=P.i+dlt; if(j<0||j>=P.d.length) return; location.replace(`#/p/${P.s.id}/${j+1}`); }
 function jump(j){ location.replace(`#/p/${P.s.id}/${j}`); }
 function toggleNotes(){ P.notes=!P.notes; $('#pnotes').classList.toggle('show',P.notes); fitSlide(); }

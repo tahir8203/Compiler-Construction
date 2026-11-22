@@ -487,3 +487,77 @@ li:has(.def:hover),li:has(.def:focus),.p:has(.def:hover),.p:has(.def:focus){posi
 .pres .slide .full .demo{margin-top:10px}
 .pres .slide .full h2{margin-bottom:4px}
 .lr-code,.lr-term{font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0}
+
+/* ===== Lecture upgrade (v18): term cards, analogies, check / glossary slides, live pipeline ===== */
+/* underlined term: hover (mouse) or tap (touch) opens #termpop */
+.term{border-bottom:2px dotted var(--cy);cursor:help;border-radius:3px;outline:none;-webkit-tap-highlight-color:transparent}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--cy) 16%,transparent);color:var(--tx)}
+.js-tips .def::after{display:none!important}
+.js-tips .def{cursor:help}
+#termpop{position:fixed;z-index:10000;background:var(--card);color:var(--tx);border:1px solid var(--cy);border-radius:14px;padding:12px 14px 10px;box-shadow:var(--shadow);font-size:15px;line-height:1.5;opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity .15s,transform .15s,visibility .15s;max-height:70vh;overflow:auto}
+#termpop.show{opacity:1;visibility:visible;transform:none}
+#termpop p{margin:.35em 0}
+#termpop .tp-h{font-family:var(--disp);font-size:18px;color:var(--cy);display:block;padding-right:26px}
+#termpop .tp-an{color:var(--tx2)}
+#termpop .tp-x{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--tx2);font-size:18px;cursor:pointer;padding:4px 8px}
+/* real-life analogy box */
+.an{margin:12px 0;padding:10px 14px;border-radius:12px;border-left:4px solid var(--vio);background:color-mix(in srgb,var(--vio) 10%,var(--card))}
+.pres .an{font-size:.92em}
+/* presenter notes */
+.pres .notes p{margin:.3em 0}
+.tnotes{margin-top:12px;font-size:14px;color:var(--tx2)}
+.tnotes summary{cursor:pointer;color:var(--warn);font-weight:600}
+.tnotes p{margin:.35em 0}
+/* check-your-understanding slide (several questions) */
+.pres .checks{display:grid;gap:12px;margin-top:10px}
+.pres .chk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 14px}
+.pres .chk .cq{margin:0 0 6px;font-size:clamp(17px,1.6vw,24px)}
+.pres .chk .cops{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pres .chk .op{display:block;text-align:left;background:var(--card2);border:1px solid var(--line);color:var(--tx);padding:8px 12px;border-radius:10px;font-size:clamp(15px,1.3vw,20px);cursor:pointer}
+.pres .chk .op:hover{border-color:var(--pri)}
+.pres .chk .op.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,var(--card))}
+.pres .chk .op.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card))}
+.pres .chk .why{display:none;font-size:clamp(14px,1.2vw,18px);color:var(--tx2);margin-top:6px}
+.pres .chk.done .why{display:block}
+@media (max-width:700px){.pres .chk .cops{grid-template-columns:1fr}}
+/* glossary slide */
+.gchips{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:10px}
+.gchip{display:flex;flex-direction:column;gap:3px;text-align:left;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--cy);border-radius:12px;padding:9px 12px;color:var(--tx);cursor:pointer;font:inherit}
+.gchip:hover,.gchip:focus-visible{border-color:var(--cy)}
+.gchip b{font-family:var(--disp);font-size:clamp(16px,1.4vw,21px);color:var(--cy)}
+.gchip span{font-size:clamp(13px,1.05vw,16px);color:var(--tx2);line-height:1.4}
+/* recap columns reuse .cmp */
+/* live pipeline */
+.lp{display:block!important;padding:4px 0}
+.lp-in{margin-bottom:8px}
+.lp-row{display:flex;gap:8px;margin-top:4px}
+.lp-row input{flex:1;min-width:0;font:16px/1.4 ui-monospace,Consolas,monospace;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--tx)}
+.lp-phases{display:flex;flex-direction:column;align-items:stretch}
+.lp-ph{border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--card);opacity:.28;transition:opacity .35s,border-color .35s,box-shadow .35s}
+.lp-ph.on{opacity:1}
+.lp-ph.cur{border-color:var(--cy);box-shadow:0 0 0 3px color-mix(in srgb,var(--cy) 25%,transparent)}
+.lp-ph h5{margin:0 0 6px;font:600 15px var(--disp);color:var(--cy)}
+.lp-ph:not(.on) .lp-o{display:none}
+.lp-arrow{text-align:center;color:var(--tx3);font-size:12px;line-height:1.2;margin:2px 0}
+.lp-src{font-size:16px}
+.lp-toks{display:flex;flex-wrap:wrap;gap:6px}
+.lp-tk{display:inline-flex;flex-direction:column;align-items:center;padding:4px 8px;border-radius:8px;border:1px solid var(--line);background:var(--card2);font-family:ui-monospace,Consolas,monospace}
+.lp-tk small{font-family:var(--font);font-size:11px;color:var(--tx3)}
+.lp-tk.keyword{border-color:var(--vio)}.lp-tk.id{border-color:var(--pri)}.lp-tk.num{border-color:var(--ok)}.lp-tk.op,.lp-tk.assign{border-color:var(--warn)}.lp-tk.ERROR{border-color:var(--bad)}
+.lp-tree{width:100%;max-width:420px;max-height:240px;display:block}
+.lp-tree line{stroke:var(--tx3);stroke-width:2}
+.lp-tree circle{fill:var(--card2);stroke:var(--pri);stroke-width:2}
+.lp-tree .lf circle{stroke:var(--ok)}
+.lp-tree text{fill:var(--tx);font:600 15px ui-monospace,Consolas,monospace;text-anchor:middle}
+.lp-sym{border-collapse:collapse;font-size:14px;margin-bottom:6px}
+.lp-sym th,.lp-sym td{border:1px solid var(--line);padding:3px 8px;text-align:left}
+.lp-chk{margin:0;padding-left:18px;font-size:14px}
+.lp-ph .code{margin:0;font-size:14px}
+.lp-err{color:var(--bad);font-weight:600;margin:4px 0}
+.pres .lp-ph p,.pres .lp-chk{font-size:15px}
+.demo .stage.lp{width:100%;max-width:none}
+@media (min-width:900px){.lp-phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.lp-arrow{display:none}.lp-ph h5::after{content:' →';color:var(--tx3)}.lp-ph[data-i="7"] h5::after{content:''}}
+.pres .two.wide.bal{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+.pres .two.wide.bal .p{font-size:clamp(17px,1.55vw,26px)}
+.pres .two.wide.bal .an,.pres .two.wide.bal .tk{font-size:clamp(14px,1.15vw,19px)}
+@media (max-width:699px){.pres .pbody{align-items:flex-start;padding:10px 14px 24px}.pres h2{font-size:clamp(22px,6.4vw,30px)}.pres .p{font-size:17px}.pres .pts li{font-size:16px}.gchips{grid-template-columns:1fr}}
