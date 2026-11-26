@@ -62,3 +62,21 @@ Rollback point: git tag `checkpoint-before-lecture-upgrade`.
 - `assets/live.js`: the live compiler pipeline (registered as the animation `livepipe`; slide fields `demo:'livepipe', full:true, input:'y = a + b * 2;'`).
 - `assets/app.js`: deck builder (max 25 slides), check/glossary slide types, notes, analogy boxes.
 - `docs/LECTURE-STYLE.md`: the house style used for the rewrite; follow it when adding or changing a lecture.
+
+## Second pass (late November 2026): "explain it simply"
+At the teacher's request every lecture was re-worked in the format he wrote for the gcc commands in Session 2: **Meaning of each part → What happens here? → Example with real output → Result**, plus “Important points for your exam” tables. The 25-slide cap was removed; no content was deleted. Decks went from 20–25 slides to 23–43.
+
+Corrections made in this pass
+- **S10** quiz: “id * T” is not a sentential form of the E–T–F grammar (after * there is always F); the option is now “id * F”.
+- **S12** “E → E + E | id: some token always leads to two trees” → “both start with id; id + id + id has two trees”.
+- **S6** a lookahead pattern written with spaces (`IF / \( .* \) {letter}`) must be written without blanks in a real .l file: `IF/\(.*\){letter}`.
+- **S25** takeaway said “six instructions and three labels” for the while loop; it has five instructions.
+
+Please confirm (second pass)
+1. gcc/javac/javap message wording and column numbers quoted in S1, S2, S4, S6, S9 and S25 were written from typical output (no compiler on the build PC); the notes say wording varies by version.
+2. **S27** new slide: array address formulas with lower bounds (e.g. A[1..10][1..15]); delete if not wanted.
+3. **S19** the practice trace `id + )` teaches one more case (“stack is $ but input remains: report and skip”), previously only in lab notes.
+4. **S24** the strict MiniC/Java rules (`i = x` and `if (i)` are errors) are marked as differing from C.
+5. **S14** the error table calls “undeclared variable” a meaning (semantic) error.
+6. **S90** the target-code example uses the Dragon book’s LDF/MULF/ADDF/STF machine.
+7. Sizes in S9 and S24 (char 1, int 4, double 8, pointers 8) are typical 64-bit values.

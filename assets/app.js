@@ -33,7 +33,7 @@ const pct = () => Math.round(S.filter(s=>st.done[s.id]).length / S.length * 100)
 
 /* Full presentation deck of a session: at most 25 slides.
    Order: title · (why this matters) · objectives · content · try it yourself · (lab animation) · recap · check your understanding · glossary · (assessment) · end. */
-const MAXD=25;
+const MAXD=99;   /* the 25-slide cap was lifted (Nov 2026): explain every topic fully */
 function deck(s){
   const d=[], opt=[];
   d.push({type:'title', k:`Week ${s.week} · ${label(s)}`, h:s.title, p:s.sub, ic:s.ic, n:s.titleN||{say:`Welcome. Today: ${s.title}. Connect it to the last lecture and say why a compiler needs it.`, ask:'What do you already know about this topic?', ans:'Accept any answer; use it to link today’s lesson to what students know.'}});
@@ -59,7 +59,7 @@ function deck(s){
 let _firstSeen=null;
 function lectureTerms(s){
   if(!window.CCTerms) return [];
-  if(!_firstSeen){ _firstSeen={}; S.forEach(z=>{ const txt=[z.title,z.sub,z.intro||''].concat(z.slides.map(x=>[x.h,x.p,x.ex,x.tk,x.an,x.psy,(x.pts||[]).map(p=>p[1]).join(' '),(x.cmp||[]).map(c=>c[1].join(' ')).join(' ')].join(' '))).join(' ');
+  if(!_firstSeen){ _firstSeen={}; S.forEach(z=>{ const txt=[z.title,z.sub,z.intro||''].concat(z.slides.map(x=>[x.h,x.p,x.ex,x.tk,x.an,x.psy,(x.pts||[]).map(p=>p[1]).join(' '),(x.cmp||[]).map(c=>c[1].join(' ')).join(' '),(x.parts||[]).map(r=>r[1]).join(' '),[].concat(x.what||[]).join(' '),x.res||''].join(' '))).join(' ');
     CCTerms.find(strip(txt)).forEach(i=>{ if(!(i in _firstSeen)) _firstSeen[i]=z.id; }); }); }
   const out=[], seen=new Set();
   (s.terms||[]).forEach(t=>{ const i=CCTerms.idx(t[0]); if(i>=0){ if(!seen.has(i)){ seen.add(i); out.push(CCTerms.row(i)); } } else out.push([t[0],'',t[1],'','']); });
@@ -80,10 +80,23 @@ function body(x){
   if(x.img) html+=`<figure class="fig"><img src="${x.img.src}" alt="${esc(x.img.alt||'')}" loading="lazy" decoding="async">${x.img.cap?`<figcaption>${x.img.cap}</figcaption>`:''}</figure>`;
   if(x.ex) html+=`<div class="ex"><b>Example:</b> ${x.ex}</div>`;
   if(x.code) html+=`<pre class="code">${x.code}</pre>`;
+  html+=xpHTML(x);
   if(x.an) html+=`<div class="an"><b>🔁 Real-life analogy:</b> ${x.an}</div>`;
   if(x.psy) html+=`<div class="ex psy"><b>⚙️ In real compilers:</b> ${x.psy}</div>`;
   if(x.tk) html+=`<div class="tk">${x.tk}</div>`;
   return html;
+}
+/* "Explain it simply" blocks: command → meaning of each part → what happens → example (+ output) → result.
+   parts:[[part, meaning],…]  what:'text' | ['step',…]  eg:{code, note, out}  tbl:{h:[…], r:[[…],…], cap}  res:'text' */
+function xpHTML(x){
+  let h='';
+  if(x.parts) h+=`<div class="xp parts"><h4>🔍 Meaning of each part</h4><div class="tblwrap"><table class="xt"><thead><tr><th>Part</th><th>Meaning</th></tr></thead><tbody>${x.parts.map(r=>`<tr><td><code>${r[0]}</code></td><td>${r[1]}</td></tr>`).join('')}</tbody></table></div></div>`;
+  if(x.what) h+=`<div class="xp what"><h4>⚙️ What happens here?</h4>${Array.isArray(x.what)?`<ol>${x.what.map(w=>`<li>${w}</li>`).join('')}</ol>`:`<p>${x.what}</p>`}</div>`;
+  if(x.eg) h+=`<div class="xp eg"><h4>🧪 Example</h4>${x.eg.note?`<p>${x.eg.note}</p>`:''}${x.eg.code?`<pre class="code">${x.eg.code}</pre>`:''}${x.eg.out?`<div class="xout"><b>Output</b><pre>${x.eg.out}</pre></div>`:''}</div>`;
+  if(x.tbl) h+=`<div class="xp tbl">${x.tbl.cap?`<h4>📋 ${x.tbl.cap}</h4>`:''}<div class="tblwrap"><table class="xt"><thead><tr>${x.tbl.h.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${x.tbl.r.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  if(h) h=`<div class="xpg">${h}</div>`;
+  if(x.res) h+=`<div class="xp res"><b>✅ Result:</b> ${x.res}</div>`;
+  return h;
 }
 function bloomHTML(b){ return `<div class="bloom">${[['head','🧠','Head','Cognitive — know & think'],['heart','❤️','Heart','Affective — value & feel'],['hand','✋','Hand','Psychomotor — do & build']].filter(r=>b[r[0]]).map(r=>`<div class="bl ${r[0]}"><h4>${r[1]} ${r[2]} <small>${r[3]}</small></h4><ul>${b[r[0]].map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>`; }
 function revealOnScroll(){
@@ -256,9 +269,9 @@ function renderSlide(dir){
   } else if(x.type==='quiz'){
     const q=x.q; inner=`<div class="k">${x.k}</div><h2 style="font-size:clamp(24px,3.2vw,48px)">${q.q}</h2><div class="quiz qs"><div class="qq">${q.o.map((o,j)=>`<button class="op" data-j="${j}">${String.fromCharCode(65+j)}. ${o}</button>`).join('')}<div class="why">💡 ${q.e}</div></div></div>`;
   } else {
-    const vis = x.demo ? demoDiv(x) : (x.ic && !x.pts && !x.cmp && !x.code && !x.img && strip(x.p||'').length<200 ? `<div class="bigicon">${x.ic}</div>` : '');
+    const vis = x.demo ? demoDiv(x) : (x.ic && !x.pts && !x.cmp && !x.code && !x.img && !x.parts && !x.tbl && !x.eg && !x.what && strip(x.p||'').length<200 ? `<div class="bigicon">${x.ic}</div>` : '');
     const txt = `<div class="k">${esc(x.k||'Concept')}</div><h2>${x.ic&&!vis&&x.type==='concept'?x.ic+' ':''}${x.h}</h2>${body(x)}`;
-    inner = x.full ? `<div class="full">${txt}${vis}</div>` : vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code)?'one':x.demo?(x.p||x.an?'wide bal':'wide'):''}"><div>${txt}</div>${vis}</div>` : txt;
+    inner = x.full ? `<div class="full">${txt}${vis}</div>` : vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code||x.parts||x.tbl||x.eg)?'one':x.demo?(x.p||x.an?'wide bal':'wide'):''}"><div>${txt}</div>${vis}</div>` : txt;
   }
   const b=$('#pbody'); b.innerHTML=`<div class="slide ${dir}">${inner}</div>`; b.scrollTop=0;
   mountDemos(b); fitSlide(); setTimeout(fitSlide,80);

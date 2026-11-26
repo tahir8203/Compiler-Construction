@@ -16,9 +16,9 @@ For each lecture id N you were given:
 `D:\Fall 2026\Compiler\site\assets\sessions\part1.js … part4.js`, each session starts with `{ id:N,`. Read the whole original first.
 Keep: `id, week, unit, ic, lo, book, assess, label, short, exam` exactly. Keep `assessment` exactly unless it contains a factual error (then fix it and report it). Keep `bloom` (you may simplify wording). Keep the lab (you may rewrite it), `disc`, `mistakes`, `rev`, `hw`.
 
-## The deck (built automatically from your data, max 25 slides)
+## The deck (built automatically from your data; the 25-slide cap was lifted in Nov 2026, keep decks under 60)
 title · why-this-matters (`introH`, `intro`, `introAn`, `introN`) · objectives · YOUR CONTENT SLIDES · try it yourself (`lab`) · lab animation (if `lab.demo`) · recap (`rev` + `mistakes`) · check slide (`check`, exactly 3 questions) · glossary (automatic) · assessment summary (if `assessment`) · end (+ `hw`).
-Content budget = 25 − fixed slides; `check.js` prints it. Usually 14–16 content slides. Merge or cut to fit; never exceed.
+There is no fixed slide budget any more: explain every topic fully, one command/rule/step per slide when needed.
 
 ## Hard rules for every content slide
 1. ONE idea per slide. Short sentences. Simple English (B1 level). No walls of text: `p` ≤ 330 characters, at most 5 `pts`, at most 3 content blocks (p / pts / cmp / code / ex / img / demo).
@@ -44,3 +44,12 @@ Keep the demos the original lecture used unless a slide is cut; you may add more
 
 ## Your final report (short)
 Per lecture: deck size, what changed (2–4 lines), the list of factual corrections, new dictionary terms added, anything the teacher should confirm.
+
+## "Explain it simply" format (Nov 2026, the teacher's own model: Session 2, gcc commands)
+For every code block, command, regex, grammar, algorithm, table or formula, use these optional slide fields (rendered by `xpHTML()` in `assets/app.js`):
+- `parts:[['part','plain meaning'],…]` → **🔍 Meaning of each part** (max ~9 rows; split the slide if more)
+- `what:'text'` or `what:['step',…]` → **⚙️ What happens here?**
+- `eg:{note, code, out}` → **🧪 Example** with a concrete input and its correct **Output**
+- `res:'one line'` → **✅ Result**
+- `tbl:{cap, h:[…], r:[[…],…]}` → a table, e.g. “Important points for your exam” at the end of a topic
+In presentation mode on wide screens the blocks sit side by side; on phones they stack.

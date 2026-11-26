@@ -142,7 +142,7 @@ Swiping changes slides on touch screens.
 
 **Rules when editing:**
 1. Edit content in `assets/sessions/*.js`.
-2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=18**. Bump `VERSION` in `sw.js` to the same number.
+2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=19**. Bump `VERSION` in `sw.js` to the same number.
 3. Commit and push to `main`. Vercel deploys within about a minute.
 4. Keep Bloom's Taxonomy Head/Heart/Hand outcomes on every session.
 
@@ -164,7 +164,7 @@ The site is now a student portal with an app feel. New files: `assets/portal.js`
 ## 4c. Lecture upgrade (2026-11-22)
 
 All 32 units were rewritten for beginners. Full details, the list of corrections and open questions: `docs/LECTURE-UPGRADE.md`. House style for any new or changed lecture: `docs/LECTURE-STYLE.md`.
-- **Max 25 slides per deck.** `deck()` in `assets/app.js` builds: title · why-this-matters (`introH`, `intro`, `introAn`, `introN`) · objectives · content slides · try it yourself (`lab`) · lab animation · recap (`rev` + `mistakes`) · check (`check`, 3 questions) · glossary (automatic) · assessment summary · end (+`hw`). Optional slides are dropped if a deck would exceed 25.
+- **Slide cap lifted (Nov 2026, v19):** decks are now 23–43 slides. Every lecture uses the “explain it simply” fields (`parts`, `what`, `eg`, `res`, `tbl`; see `docs/LECTURE-STYLE.md`). Originally max 25 slides per deck. `deck()` in `assets/app.js` builds: title · why-this-matters (`introH`, `intro`, `introAn`, `introN`) · objectives · content slides · try it yourself (`lab`) · lab animation · recap (`rev` + `mistakes`) · check (`check`, 3 questions) · glossary (automatic) · assessment summary · end (+`hw`). Optional slides are dropped if a deck would exceed 25.
 - **Slide fields added:** `an` (real-life analogy), `n` as `{say, ask, ans, watch}`, `input` for the live demo. `lab.n` holds lab notes.
 - **`assets/terms.js`:** `CC_TERMS` rows `[term, aliases|…, meaning, why, analogy]` plus the engine that underlines the first use of each term on a slide and opens a card on hover and tap. Add a row here for every new technical term.
 - **`assets/live.js`:** the live compiler pipeline animation `livepipe` (`demo:'livepipe', full:true, input:'y = a + b * 2;'`).
