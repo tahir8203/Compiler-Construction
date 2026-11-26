@@ -81,9 +81,11 @@ function body(x){
   if(x.ex) html+=`<div class="ex"><b>Example:</b> ${x.ex}</div>`;
   if(x.code) html+=`<pre class="code">${x.code}</pre>`;
   html+=xpHTML(x);
-  if(x.an) html+=`<div class="an"><b>🔁 Real-life analogy:</b> ${x.an}</div>`;
-  if(x.psy) html+=`<div class="ex psy"><b>⚙️ In real compilers:</b> ${x.psy}</div>`;
-  if(x.tk) html+=`<div class="tk">${x.tk}</div>`;
+  let ft='';
+  if(x.an) ft+=`<div class="an"><b>🔁 Real-life analogy:</b> ${x.an}</div>`;
+  if(x.psy) ft+=`<div class="ex psy"><b>⚙️ In real compilers:</b> ${x.psy}</div>`;
+  if(x.tk) ft+=`<div class="tk">${x.tk}</div>`;
+  if(ft) html+=`<div class="sfoot">${ft}</div>`;
   return html;
 }
 /* "Explain it simply" blocks: command → meaning of each part → what happens → example (+ output) → result.
@@ -273,8 +275,9 @@ function renderSlide(dir){
     const txt = `<div class="k">${esc(x.k||'Concept')}</div><h2>${x.ic&&!vis&&x.type==='concept'?x.ic+' ':''}${x.h}</h2>${body(x)}`;
     inner = x.full ? `<div class="full">${txt}${vis}</div>` : vis ? `<div class="two ${x.demo&&(x.pts||x.cmp||x.code||x.parts||x.tbl||x.eg)?'one':x.demo?(x.p||x.an?'wide bal':'wide'):''}"><div>${txt}</div>${vis}</div>` : txt;
   }
-  const b=$('#pbody'); b.innerHTML=`<div class="slide ${dir}">${inner}</div>`; b.scrollTop=0;
-  mountDemos(b); fitSlide(); setTimeout(fitSlide,80);
+  const xps = !x.type||x.type==='concept' ? (x.parts||x.what||x.eg||x.tbl||x.res?' xps':'') : '';
+  const b=$('#pbody'); b.innerHTML=`<div class="slide ${dir}${xps}">${inner}</div>`; b.scrollTop=0;
+  xcolsInit($('.slide',b)); mountDemos(b); fitSlide(); setTimeout(fitSlide,80);
   $$('.qq',b).forEach(qq=>{ const q=x.q||x.qs[+qq.dataset.qi]; qq.onclick=e=>{ const o=e.target.closest('.op'); if(!o||qq.classList.contains('done')) return; qq.classList.add('done'); $$('.op',qq)[q.a].classList.add('right'); if(+o.dataset.j!==q.a) o.classList.add('wrong'); fitSlide(); }; });
   $$('.gchip',b).forEach(c=>c.onclick=e=>{ e.stopPropagation(); CCTerms.open(c, c.dataset.gt); });
   CCTerms.annotate($('.slide',b));
@@ -282,13 +285,45 @@ function renderSlide(dir){
   if(!$('#pov').classList.contains('show')) $('#pNext').focus({preventScroll:true});
   if(P.watch) scheduleWatch();
 }
-/* Fit-to-screen: shrink a slide that is taller than the stage so nothing is cut off (never below 60%; beyond that the stage scrolls). */
+/* Fit-to-screen (v20). The slide always uses the full width of the stage and is never shrunk into the middle.
+   Explain slides: the blocks (code, parts, what happens, example) are flowed into two balanced columns, reading order
+   kept (left column top to bottom, then right column). Tall slides: 1) compact layout (class d1), 2) tighter (d2),
+   3) scale the text a little (never below 82%; the slide keeps its full width). If it still does not fit, the stage
+   scrolls and a glow at the bottom edge says there is more. Phones keep large text and scroll. */
+function xcolsInit(sl){
+  const g=$('.xpg',sl); if(!g) return;
+  const blocks=['parts','what','eg'].map(c=>$('.xp.'+c,g)).filter(Boolean);
+  const pre=g.previousElementSibling, code=pre&&pre.matches('pre.code')?pre:null;
+  if(blocks.length+(code?1:0)<2 || !blocks.length) return;
+  const xc=document.createElement('div'); xc.className='xcols'; xc.innerHTML='<div class="xc"></div><div class="xc"></div>'; g.before(xc);
+  sl._x={xc,blocks,code}; xplace(sl,false,Math.ceil(blocks.length/2));
+}
+function xplace(sl,inc,k){
+  const {xc,blocks,code}=sl._x, L=xc.children[0], R=xc.children[1];
+  const seq=inc&&code?[code].concat(blocks):blocks; if(code&&!inc) xc.before(code);
+  L.append(...seq.slice(0,k)); R.append(...seq.slice(k)); xc.classList.toggle('solo',k>=seq.length);
+}
+function xbalance(sl){
+  if(!sl._x) return; const {xc,blocks,code}=sl._x; let best=null;
+  [false,true].forEach(inc=>{ if(inc&&!code) return; const n=blocks.length+(inc?1:0);
+    for(let k=1;k<=n;k++){ if(k===n&&n>1&&inc) continue; xplace(sl,inc,k);
+      if(inc&&code.scrollWidth>code.clientWidth+2) continue;           // code would need sideways scrolling: keep it full width
+      const h=xc.offsetHeight+(code&&!inc?code.offsetHeight:0); if(!best||h<best.h-4) best={h,inc,k}; } });
+  if(best) xplace(sl,best.inc,best.k);
+}
 function fitSlide(){
   const b=$('#pbody'), sl=b&&$('.slide',b); if(!sl) return;
-  sl.style.zoom=''; if(innerWidth<700) return;   // phones: keep text large and let the slide scroll
-  const cs=getComputedStyle(b);
-  const avail=b.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom), need=sl.scrollHeight;
-  if(need>avail+2) sl.style.zoom=Math.max(0.6, (avail-4)/need).toFixed(3);
+  sl.style.zoom=''; sl.style.maxWidth=''; sl.classList.remove('d1','d2'); b.classList.remove('more');
+  if(innerWidth<900) return;
+  const over=()=>b.scrollHeight>b.clientHeight+1;
+  xbalance(sl); if(!over()) return;
+  sl.classList.add('d1'); xbalance(sl); if(!over()) return;
+  sl.classList.add('d2'); xbalance(sl); if(!over()) return;
+  const maxW=parseFloat(getComputedStyle(sl).maxWidth)||1680;
+  const fits=z=>{ sl.style.zoom=z; sl.style.maxWidth=(maxW/z)+'px'; return !over(); };
+  let lo=0.82, hi=1;
+  if(fits(lo)){ for(let i=0;i<5;i++){ const m=(lo+hi)/2; if(fits(m)) lo=m; else hi=m; } }
+  if(!fits(+lo.toFixed(3))) b.classList.add('more');
 }
 addEventListener('resize',()=>{ if(P) fitSlide(); });
 /* Watch mode: plays the deck like an animated video — animations auto-play, quizzes reveal, slides auto-advance. */

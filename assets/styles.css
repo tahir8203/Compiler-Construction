@@ -580,3 +580,58 @@ table.xt td:first-child code{white-space:nowrap}
 .pres .xp{font-size:clamp(15px,1.4vw,22px)}.pres .xp pre.code,.pres .xout pre{font-size:clamp(13px,1.2vw,19px)}.pres .xp.res{font-size:clamp(16px,1.6vw,24px)}
 @media (max-width:700px){table.xt{font-size:14px}table.xt th,table.xt td{padding:5px 6px}table.xt td:first-child code{white-space:normal;word-break:break-all}}
 @media (min-width:900px){.pres .xpg{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start;grid-auto-flow:row dense}.pres .xpg .xp.parts{grid-column:1;grid-row:span 2}.pres .xpg .xp.what,.pres .xpg .xp.eg{grid-column:2}.pres .xpg .xp.tbl,.pres .xpg>.xp:only-child{grid-column:1/-1}.pres .xpg:not(:has(.parts)) .xp.what{grid-column:1}.pres .xpg:not(:has(.parts)) .xp.eg{grid-column:2}.pres .xpg:not(:has(.parts)):not(:has(.what)) .xp.eg{grid-column:1/-1}}
+
+/* Full-screen slides (v20): the slide uses the whole stage. Tall slides switch to a compact layout (d1, d2) instead of shrinking. */
+.pres .slide{max-width:1680px}
+.pres .an{font-size:clamp(14px,1.3vw,21px)}
+
+.xpg:empty{display:none}
+.pres .pbody{overflow-x:hidden}
+.pres .pbody.more{box-shadow:inset 0 -18px 16px -14px color-mix(in srgb,var(--cy) 55%,transparent)}
+@media (min-width:900px){
+  .pres .phead{padding:3px 12px;font-size:13px}
+  .pres .phead .iconbtn{width:32px;height:32px;min-width:32px;font-size:15px}
+  .pres .pfoot{padding:6px 14px}
+  .pres .pbody{padding:6px clamp(16px,2.6vw,48px) 10px}
+  /* explain slides: compact heading, footer boxes side by side */
+  .pres .slide.xps h2{font-size:clamp(24px,3vw,46px);margin:.1em 0 .25em}
+  .pres .slide.xps .p{font-size:clamp(16px,1.6vw,25px);max-width:none}
+  .pres .slide.xps pre.code{margin:8px 0}
+  .pres .slide.xps .xp{margin:7px 0}
+  .pres .slide.xps .sfoot,.pres .slide.d1 .sfoot{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 14px;align-items:stretch}
+  .pres .slide.xps .sfoot>*,.pres .slide.d1 .sfoot>*{margin:7px 0}
+  .pres .slide.xps .tk{font-size:clamp(15px,1.5vw,23px)}
+  .pres .xcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}
+  .pres .xcols.solo{grid-template-columns:minmax(0,1fr)}.pres .xcols.solo .xc:empty{display:none}
+  .pres .xcols .xc>pre.code{margin:7px 0}
+  .pres .title .bigicon{white-space:nowrap}
+  .pres .xpg:not(:has(.parts)):not(:has(.eg)) .xp.what{grid-column:1/-1}
+  .pres .two.title{grid-template-columns:minmax(0,1fr) clamp(130px,21vw,330px)}
+  /* d1 = compact */
+  .pres .slide.d1 .k{font-size:clamp(12px,1vw,15px)}
+  .pres .slide.d1 h2{font-size:clamp(22px,2.5vw,40px);margin:.05em 0 .2em}
+  .pres .slide.d1 .p{font-size:clamp(16px,1.55vw,24px);line-height:1.35;max-width:none}
+  .pres .slide.d1 .pts{gap:6px;margin:8px 0}
+  .pres .slide.d1 .pts li{font-size:clamp(15px,1.45vw,22px);padding:7px 14px}
+  .pres .slide.d1 .ex,.pres .slide.d1 .tk,.pres .slide.d1 .an{font-size:clamp(14px,1.3vw,20px);padding:7px 12px;margin:7px 0}
+  .pres .slide.d1 .cmp{margin-top:8px}.pres .slide.d1 .cmp>div{padding:8px 12px}
+  .pres .slide.d1 .cmp h4{font-size:clamp(15px,1.5vw,22px)}.pres .slide.d1 .cmp li{font-size:clamp(14px,1.35vw,20px)}
+  .pres .slide.d1 pre.code{font-size:clamp(13px,1.25vw,19px);padding:8px 12px;margin:7px 0;line-height:1.4}
+  .pres .slide.d1 .xp{font-size:clamp(14px,1.3vw,20px);padding:7px 12px;margin:6px 0}
+  .pres .slide.d1 .xp pre.code,.pres .slide.d1 .xout pre{font-size:clamp(13px,1.15vw,18px);padding:6px 10px;line-height:1.35}
+  .pres .slide.d1 table.xt th,.pres .slide.d1 table.xt td{padding:4px 8px}
+  .pres .slide.d1 .xp.res{font-size:clamp(15px,1.4vw,21px)}
+  .pres .slide.d1 .xpg{gap:0 12px}
+  .pres .slide.d1 .chk{padding:7px 12px}.pres .slide.d1 .checks{gap:8px}
+  /* d2 = tighter still */
+  .pres .slide.d2 h2{font-size:clamp(20px,2.1vw,34px)}
+  .pres .slide.d2 .p{font-size:clamp(15px,1.4vw,21px)}
+  .pres .slide.d2 .pts li{font-size:clamp(14px,1.3vw,20px);padding:5px 12px}
+  .pres .slide.d2 .ex,.pres .slide.d2 .tk,.pres .slide.d2 .an{font-size:clamp(13px,1.15vw,18px);padding:5px 10px;margin:5px 0}
+  .pres .slide.d2 .xp{font-size:clamp(13px,1.2vw,18px);padding:5px 10px;margin:5px 0}
+  .pres .slide.d2 .xp h4{margin-bottom:3px}
+  .pres .slide.d2 table.xt th,.pres .slide.d2 table.xt td{padding:3px 8px}
+  .pres .slide.d2 pre.code{font-size:clamp(12px,1.1vw,17px);padding:6px 10px;margin:5px 0}
+  .pres .slide.d2 .xp.res{font-size:clamp(14px,1.3vw,19px)}
+  .pres .slide.d2 .chk .cq{font-size:clamp(15px,1.35vw,20px);margin-bottom:4px}.pres .slide.d2 .chk .op{font-size:clamp(14px,1.15vw,17px);padding:5px 10px}
+}

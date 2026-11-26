@@ -142,7 +142,7 @@ Swiping changes slides on touch screens.
 
 **Rules when editing:**
 1. Edit content in `assets/sessions/*.js`.
-2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=19**. Bump `VERSION` in `sw.js` to the same number.
+2. After any asset change, bump `?v=N` on every script and stylesheet in `index.html`. It is now **v=20**. Bump `VERSION` in `sw.js` to the same number.
 3. Commit and push to `main`. Vercel deploys within about a minute.
 4. Keep Bloom's Taxonomy Head/Heart/Hand outcomes on every session.
 
@@ -231,3 +231,4 @@ All 32 units were rewritten for beginners. Full details, the list of corrections
 ## 8. Ready-made prompt for a new chat
 
 > Read `D:\Fall 2026\Compiler\HANDOFF.md`. It describes my Compiler Construction course website (repo `D:\Fall 2026\Compiler\site`, live on Vercel) and its Android app. Keep the same engine, instructor details and Bloom's Taxonomy format. After changes: bump `?v=N` in index.html, commit, push to main (Vercel auto-deploys), rebuild the APK with `bash android/build-local.sh <version> <code>` if the app needs updating, and ask me before publishing a release or merging portfolio PRs. My request: …
+- **Full-screen slides (Nov 2026, v20):** in Present mode a slide always uses the full stage width (max 1680px). `fitSlide()` in `assets/app.js` no longer shrinks a tall slide into the middle: it (1) flows the explain blocks (code, parts, what happens, example) into two balanced columns (`xcolsInit` / `xbalance`), (2) switches to compact CSS levels `.slide.d1` then `.slide.d2`, (3) scales text at most to 82% while keeping full width. If the slide is still too tall the stage scrolls and the bottom edge glows (`.pbody.more`). Phones (<900px) are unchanged: large text, vertical scroll. Styles are at the end of `assets/styles.css`.
