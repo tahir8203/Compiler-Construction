@@ -635,3 +635,31 @@ table.xt td:first-child code{white-space:nowrap}
   .pres .slide.d2 .xp.res{font-size:clamp(14px,1.3vw,19px)}
   .pres .slide.d2 .chk .cq{font-size:clamp(15px,1.35vw,20px);margin-bottom:4px}.pres .slide.d2 .chk .op{font-size:clamp(14px,1.15vw,17px);padding:5px 10px}
 }
+
+/* Lecture editor (teacher only, v21) */
+#cced{position:fixed;inset:0;z-index:300;background:rgba(3,7,18,.65);display:flex;align-items:stretch;justify-content:center;padding:clamp(0px,2vw,24px)}
+.cced-box{background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:16px;width:min(980px,100%);display:flex;flex-direction:column;overflow:hidden}
+.cced-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card);flex-wrap:wrap}
+.cced-head b{flex:1;min-width:140px}
+.cced-msg{font-size:13px;color:var(--tx3)}.cced-msg.bad{color:var(--bad);font-weight:600;flex-basis:100%;order:9}
+.cced-body{padding:14px;overflow:auto;flex:1}
+.cced-body h4{margin:16px 0 6px}
+.cced-tip{font-size:13px;color:var(--tx3);margin:.2em 0 .8em}
+.cced-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cced-f{display:block;margin:8px 0}.cced-f>span{display:block;font-size:13px;font-weight:600;margin-bottom:3px}.cced-f small{font-weight:400;color:var(--tx3)}
+#cced input,#cced textarea{width:100%;box-sizing:border-box;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:15px}
+#cced textarea{resize:vertical;line-height:1.4}#cced textarea.mono{font-family:var(--mono);font-size:13.5px;white-space:pre;overflow-x:auto}
+#cced input:focus,#cced textarea:focus{outline:2px solid var(--cy);outline-offset:0}
+.cced-grid{--n:2;display:grid;gap:6px}
+.cced-gr{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr)) 40px;gap:6px;align-items:center}
+.cced-grid[data-fixed="1"] .cced-gr{grid-template-columns:minmax(0,.45fr) minmax(0,1fr) 40px}
+.cced-gr.head b{font-size:12px;color:var(--tx3)}
+.cced-gb{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.cced-adv{margin-top:16px;border:1px dashed var(--line);border-radius:12px;padding:8px 12px}.cced-adv summary{cursor:pointer;font-weight:600}
+.cced-list{display:grid;gap:6px}
+.cced-it{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 10px;flex-wrap:wrap}
+.cced-it .num{font-family:var(--disp);color:var(--tx3);min-width:26px}.cced-it .grow{flex:1;min-width:150px}.cced-it small{display:block;color:var(--cy);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.cced-btns{float:right;display:flex;gap:6px;margin:0 0 6px 8px}
+.cced-toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:400;background:var(--card);color:var(--tx);border:1px solid var(--ok);border-radius:999px;padding:9px 18px;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+@media (max-width:700px){#cced{padding:0}.cced-box{border-radius:0;border:0}.cced-row{grid-template-columns:1fr}.cced-it .btn{padding:6px 8px}}
+@media print{#cced,.cced-btns{display:none}}

@@ -39,7 +39,7 @@ function deck(s){
   d.push({type:'title', k:`Week ${s.week} · ${label(s)}`, h:s.title, p:s.sub, ic:s.ic, n:s.titleN||{say:`Welcome. Today: ${s.title}. Connect it to the last lecture and say why a compiler needs it.`, ask:'What do you already know about this topic?', ans:'Accept any answer; use it to link today’s lesson to what students know.'}});
   if(s.intro){ const x={type:'concept', k:'Why this matters', h:s.introH||'Why this matters', p:s.intro, an:s.introAn, ic:s.ic, n:s.introN||{say:'Start with the story or question. Let 2–3 students answer before you move on.'}}; d.push(x); opt.push(x); }
   d.push({type:'obj', k:'Learning objectives', h:'By the end of this lecture you will be able to…', pts:s.obj.map(o=>['🎯',o]), n:{say:'Read the objectives aloud in simple words. They are what students should be able to do, not just know.', ask:'Which of these do you already know something about?', ans:'Use the answers to decide where to go slower.'}});
-  s.slides.forEach(x=>d.push(Object.assign({type:'concept'},x)));
+  s.slides.forEach((x,i)=>d.push(Object.assign({type:'concept',_i:i},x)));
   if(s.lab) d.push({type:'lab', k:'Try it yourself', h:s.lab.t.replace(/^Lab:\s*/,''), pts:s.lab.steps.map((x,i)=>[(i+1)+'.',x]), p:s.lab.out?`<b>You should end with:</b> ${s.lab.out}`:'', n:s.lab.n||{say:'Give 15–20 minutes. Walk around and help. Ask 2–3 students to show their result.', watch:'Students who finish early can help a neighbour.'}});
   if(s.lab&&s.lab.demo){ const x={type:'demo', k:'Lab animation', h:s.lab.demoH||'Watch the lab run', demo:s.lab.demo, full:true, n:s.lab.demoN||'Step through before students try it, so they know what to look for.'}; d.push(x); opt.push(x); }
   d.push({type:'rev', k:'Recap', h:'Remember these points', cmp:[['✔ Remember',s.rev],['⚠️ Watch out',s.mistakes||[]]].filter(c=>c[1].length), n:{say:'Ask students to explain each point in their own words before you read it.', ask:(s.disc&&s.disc[0])||'Which point was the hardest today?', ans:(s.disc&&s.disc.length>1)?'Other discussion questions: '+s.disc.slice(1).join(' · '):'Revisit that point with a new example.'}});
@@ -215,7 +215,7 @@ function study(id){
       ${s.intro?`<div class="card" id="intro"><h2>👋 Introduction</h2><p class="muted" style="font-size:17px">${s.intro}</p></div><br>`:''}
       <div class="card obj" id="obj"><h2>🎯 Learning objectives</h2><ul>${s.obj.map(o=>`<li>${o}</li>`).join('')}</ul></div><br>
       ${s.bloom?`<div class="card" id="bloom"><h2>🌸 Bloom's Taxonomy outcomes</h2>${bloomHTML(s.bloom)}</div><br>`:''}
-      ${s.slides.map((x,i)=>`<section class="slideCard" id="c${i}"><div class="k">${esc(x.k||'Concept')} · ${i+1}/${s.slides.length}</div><h3>${x.ic?x.ic+' ':''}${x.h}</h3>${body(x)}${x.demo?demoDiv(x):''}${x.n?`<details class="tnotes noprint"><summary>🧑‍🏫 Teacher notes</summary>${notesHTML(x.n)}</details>`:''}</section>`).join('')}
+      ${s.slides.map((x,i)=>`<section class="slideCard" id="c${i}" data-si="${i}"><div class="k">${esc(x.k||'Concept')} · ${i+1}/${s.slides.length}</div><h3>${x.ic?x.ic+' ':''}${x.h}</h3>${body(x)}${x.demo?demoDiv(x):''}${x.n?`<details class="tnotes noprint"><summary>🧑‍🏫 Teacher notes</summary>${notesHTML(x.n)}</details>`:''}</section>`).join('')}
       ${s.lab?`<div class="card lab" id="lab"><h2>🛠 ${esc(s.lab.t)}</h2><ol>${s.lab.steps.map(m=>`<li>${m}</li>`).join('')}</ol>${s.lab.out?`<p class="tiny"><b>Output:</b> ${s.lab.out}</p>`:''}${s.lab.demo?`<div data-demo="${s.lab.demo}"></div>`:''}</div><br>`:''}
       ${s.disc?`<div class="card" id="disc"><h2>💬 Discussion questions</h2><ol>${s.disc.map(m=>`<li>${m}</li>`).join('')}</ol></div><br>`:''}
       ${s.mistakes&&s.mistakes.length?`<div class="card mist" id="mist"><h2>⚠️ Common mistakes</h2><ul>${s.mistakes.map(m=>`<li>${m}</li>`).join('')}</ul></div><br>`:''}
@@ -231,6 +231,7 @@ function study(id){
   const a=s.assessment; if(a && (a.mcq||a.tf)) wireChoices($('#assess',app), {mcq:a.mcq||[], tf:a.tf||[]}, (r,n)=>{ $('#ascore',app).textContent=`${a.title}: ${r} / ${n}`; st.quiz['a'+s.id]=r+'/'+n; save(); hook('onAssess',s,r,n); });
   $$('[data-jump]',app).forEach(x=>x.onclick=e=>{ e.preventDefault(); const t=$(x.getAttribute('href'),app); t&&t.scrollIntoView({behavior:'smooth'}); });
   $('#bm').onclick = () => { st.bm[s.id]?delete st.bm[s.id]:st.bm[s.id]=1; save(); $('#bm').textContent = st.bm[s.id]?'🔖 Bookmarked':'🔖 Bookmark'; };
+  window.CCEdit&&CCEdit.decorate();
   $('#done').onclick = () => { st.done[s.id]?delete st.done[s.id]:st.done[s.id]=1; save(); $('#done').textContent = st.done[s.id]?'✔ Completed':'Mark as completed'; hook('onDone',s,!!st.done[s.id]); };
 }
 
@@ -284,6 +285,7 @@ function renderSlide(dir){
   $('#pnotes').innerHTML=`<b>Presenter notes</b>${notesHTML(x.n)}`; $('#pnotes').classList.toggle('show',P.notes);
   if(!$('#pov').classList.contains('show')) $('#pNext').focus({preventScroll:true});
   if(P.watch) scheduleWatch();
+  window.CCEdit&&CCEdit.decorate();
 }
 /* Fit-to-screen (v20). The slide always uses the full width of the stage and is never shrunk into the middle.
    Explain slides: the blocks (code, parts, what happens, example) are flowed into two balanced columns, reading order
@@ -437,6 +439,8 @@ function route(){
 }
 document.addEventListener('keydown',e=>{ if(!P && app._keys) app._keys(e); });
 function hook(n,...a){ try{ const p=window.CCPortal; if(p&&p[n]) return p[n](...a); }catch(e){ console.error(e); } }
-window.CCApp = { deck, sessions:S, get st(){return st}, save, sess, label, short, esc, strip, pct, kindChip, instructorCard, flipTheme, setTheme, allTerms, mcqBlock, wireChoices, mountDemos, revealOnScroll, route, resetAll(){ st=blank(); save(); } };
+window.CCApp = { deck, sessions:S, get st(){return st}, save, sess, label, short, esc, strip, pct, kindChip, instructorCard, flipTheme, setTheme, allTerms, mcqBlock, wireChoices, mountDemos, revealOnScroll, route, resetAll(){ st=blank(); save(); }, get pres(){return P},
+  /* re-draw after lecture content changed (teacher edit or cloud update) */
+  refresh(){ _firstSeen=null; if(P){ P.d=deck(P.s); P.i=Math.min(P.i,P.d.length-1); renderSlide(''); } else route(); } };
 addEventListener('hashchange', route); route();
 })();
