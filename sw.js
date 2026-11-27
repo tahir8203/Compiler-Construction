@@ -1,8 +1,8 @@
 /* Offline support for the Compiler Construction portal. Bump VERSION with the ?v= number in index.html. */
-const VERSION = 'cc-v21';
-const CORE = ['./', 'index.html', 'manifest.webmanifest', 'assets/styles.css?v=21', 'assets/portal.css?v=21',
-  'assets/sessions/part1.js?v=21', 'assets/sessions/part2.js?v=21', 'assets/sessions/part3.js?v=21', 'assets/sessions/part4.js?v=21',
-  'assets/demos.js?v=21', 'assets/tools.js?v=21', 'assets/live.js?v=21', 'assets/terms.js?v=21', 'assets/portal-data.js?v=21', 'assets/portal.js?v=21', 'assets/app.js?v=21', 'assets/cloud-config.js?v=21', 'assets/cloud.js?v=21', 'assets/editor.js?v=21',
+const VERSION = 'cc-v22';
+const CORE = ['./', 'index.html', 'manifest.webmanifest', 'assets/styles.css?v=22', 'assets/portal.css?v=22',
+  'assets/sessions/part1.js?v=22', 'assets/sessions/part2.js?v=22', 'assets/sessions/part3.js?v=22', 'assets/sessions/part4.js?v=22',
+  'assets/demos.js?v=22', 'assets/tools.js?v=22', 'assets/live.js?v=22', 'assets/terms.js?v=22', 'assets/portal-data.js?v=22', 'assets/portal.js?v=22', 'assets/app.js?v=22', 'assets/cloud-config.js?v=22', 'assets/cloud.js?v=22', 'assets/editor.js?v=22',
   'assets/instructor.jpg', 'assets/icons/icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim())); });

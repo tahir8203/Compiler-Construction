@@ -209,7 +209,7 @@ function study(id){
     <h1>${esc(label(s))}: ${esc(s.title)}</h1><p class="muted" style="font-size:18px">${esc(s.sub)}</p>
     <div class="top2" style="display:flex;gap:8px;flex-wrap:wrap">${kindChip(s)}<span class="chip">⏱ 90 minutes</span><span class="chip">LO ${s.lo.join(', ')}</span>${s.book?`<span class="chip">📚 ${esc(s.book)}</span>`:''}</div>
     <div style="margin-top:12px">${insBadge}</div>
-    <div class="toolbar"><a class="btn pri" href="#/p/${s.id}/1">🖥 Present slides (${deck(s).length})</a><a class="btn watch" href="#/w/${s.id}">▶ Watch animated lecture</a><button class="btn" id="bm">${st.bm[s.id]?'🔖 Bookmarked':'🔖 Bookmark'}</button><button class="btn" id="done">${st.done[s.id]?'✔ Completed':'Mark as completed'}</button><button class="btn" onclick="print()">🖨 Print handout</button></div></div>
+    <div class="toolbar"><a class="btn pri" href="#/p/${s.id}/1">🖥 Present slides (${deck(s).length})</a><a class="btn watch" href="#/w/${s.id}">▶ Watch animated lecture</a><button class="btn" id="bm">${st.bm[s.id]?'🔖 Bookmarked':'🔖 Bookmark'}</button><button class="btn" id="done">${st.done[s.id]?'✔ Completed':'Mark as completed'}</button><button class="btn" onclick="print()">🖨 Print handout</button><button class="btn" id="focusBtn" title="Hide the top bar and the side list (press F)">🎯 Focus mode</button></div></div>
     <div class="layout"><nav class="toc" aria-label="On this page"><b class="tiny">ON THIS PAGE</b>${s.intro?'<a href="#intro" data-jump>👋 Introduction</a>':''}<a href="#obj" data-jump>🎯 Objectives</a>${s.bloom?'<a href="#bloom" data-jump>🌸 Head · Heart · Hand</a>':''}${s.slides.map((x,i)=>`<a href="#c${i}" data-jump>${i+1}. ${esc(strip(x.h))}</a>`).join('')}${s.lab?'<a href="#lab" data-jump>🛠 Activity</a>':''}${s.disc?'<a href="#disc" data-jump>💬 Discussion</a>':''}<a href="#mist" data-jump>⚠️ Common mistakes</a><a href="#rev" data-jump>✔ Summary</a><a href="#quiz" data-jump>📝 Knowledge check</a>${s.assessment?'<a href="#assess" data-jump>📌 '+esc(s.assessment.title)+'</a>':''}${s.hw?'<a href="#hw" data-jump>🏠 Homework</a>':''}<a href="#terms" data-jump>📘 Key terms</a></nav>
     <div>
       ${s.intro?`<div class="card" id="intro"><h2>👋 Introduction</h2><p class="muted" style="font-size:17px">${s.intro}</p></div><br>`:''}
@@ -232,8 +232,24 @@ function study(id){
   $$('[data-jump]',app).forEach(x=>x.onclick=e=>{ e.preventDefault(); const t=$(x.getAttribute('href'),app); t&&t.scrollIntoView({behavior:'smooth'}); });
   $('#bm').onclick = () => { st.bm[s.id]?delete st.bm[s.id]:st.bm[s.id]=1; save(); $('#bm').textContent = st.bm[s.id]?'🔖 Bookmarked':'🔖 Bookmark'; };
   window.CCEdit&&CCEdit.decorate();
+  $('#focusBtn').onclick = () => setFocus(!document.body.classList.contains('focus'));
+  app._keys = e => { if(e.ctrlKey||e.metaKey||e.altKey||document.getElementById('cced')) return; if(e.target.matches && e.target.matches('input,textarea,select,[contenteditable]')) return; if(e.key==='f'||e.key==='F') setFocus(!document.body.classList.contains('focus')); else if(e.key==='Escape' && document.body.classList.contains('focus')) setFocus(false); };
+  if(focusPref()) setFocus(true, true);
   $('#done').onclick = () => { st.done[s.id]?delete st.done[s.id]:st.done[s.id]=1; save(); $('#done').textContent = st.done[s.id]?'✔ Completed':'Mark as completed'; hook('onDone',s,!!st.done[s.id]); };
 }
+
+/* ---------- focus mode (study view): hide the top bar and the side list; the choice is remembered ---------- */
+function focusPref(){ try{ return localStorage.getItem('cc-focus')==='1'; }catch(e){ return false; } }
+function setFocus(on, quiet){
+  const cards=$$('.slideCard, .layout .card', app), keep=quiet?null:cards.find(c=>c.getBoundingClientRect().bottom>innerHeight*.4), off=keep?keep.getBoundingClientRect().top:0;
+  document.body.classList.toggle('focus', on);
+  let x=$('#focusExit');
+  if(on && !x){ x=document.createElement('button'); x.id='focusExit'; x.className='noprint'; x.title='Show the top bar and the side list again (Esc)'; x.innerHTML='✕ <span>Exit focus</span>'; x.onclick=()=>setFocus(false); document.body.appendChild(x); }
+  if(!on && x) x.parentNode.removeChild(x);
+  const b=$('#focusBtn'); if(b) b.textContent=on?'✕ Exit focus mode':'🎯 Focus mode';
+  if(!quiet){ try{ localStorage.setItem('cc-focus', on?'1':'0'); }catch(e){} if(keep) window.scrollBy({top:keep.getBoundingClientRect().top-off, behavior:'instant'}); }
+}
+function clearFocus(){ document.body.classList.remove('focus'); const x=$('#focusExit'); if(x) x.parentNode.removeChild(x); }
 
 /* ---------- presentation engine ---------- */
 let P = null;
@@ -426,6 +442,7 @@ function notFound(){ app.innerHTML=`<div class="wrap shead"><h1>Page not found</
 function route(){
   const h=location.hash.replace(/^#\/?/,'').split('/');
   $('#nav').classList.remove('open');
+  if(h[0]!=='p' && h[0]!=='w') clearFocus();
   if(h[0]==='p'){ present(h[1],h[2]); return; }
   if(h[0]==='w'){ present(h[1],1); history.replaceState(null,'',`#/p/${h[1]}/1`); startWatch(); return; }
   if(P) closePres();

@@ -663,3 +663,15 @@ table.xt td:first-child code{white-space:nowrap}
 .cced-toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:400;background:var(--card);color:var(--tx);border:1px solid var(--ok);border-radius:999px;padding:9px 18px;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 @media (max-width:700px){#cced{padding:0}.cced-box{border-radius:0;border:0}.cced-row{grid-template-columns:1fr}.cced-it .btn{padding:6px 8px}}
 @media print{#cced,.cced-btns{display:none}}
+
+/* focus mode (study view): no top bar, no side list, content uses the full width */
+body.focus .top,body.focus footer,body.focus .toc{display:none}
+body.focus .layout{grid-template-columns:1fr}
+body.focus .wrap{max-width:1320px}
+body.focus .shead{padding-top:14px}
+#focusExit{position:fixed;top:10px;right:14px;z-index:60;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(10px);color:var(--tx2);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600;box-shadow:var(--shadow);opacity:.55;transition:opacity .15s}
+#focusExit:hover,#focusExit:focus-visible{opacity:1;color:var(--tx)}
+@media (max-width:700px){#focusExit{top:8px;right:8px;padding:7px 11px}#focusExit span{display:none}}
+@media print{#focusExit{display:none}}
+body.focus .tabbar{display:none}
+body.focus{padding-bottom:0}
